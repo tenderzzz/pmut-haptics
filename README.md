@@ -6,9 +6,15 @@ Python 工程版本 **0.1.0**，2026-10-15 增加单文件 HTML。这是一套�
 
 ![默认空气触点仿真](docs/results/assets/touchpoint.png)
 
-## 直接打开 HTML
+## 打开实验台
 
-**双击根目录的 [pmut-haptics.html](pmut-haptics.html)，用现代浏览器打开即可。** 只需这一个文件，可复制或转发，不用安装 Python、不用启动本地服务。包含参数调整、声场、三维阵列几何与目标轨迹、调制、轨迹回放、实验对比和数据导出。三维图支持旋转、缩放、俯视、侧视和图片保存；绘图库已内嵌，文件约 4.9 MB，仍无外部运行依赖。
+- **[在线打开实验台](https://tenderzzz.github.io/pmut-haptics/)**：直接在浏览器运行。
+- **[下载离线 HTML](https://github.com/tenderzzz/pmut-haptics/releases/latest/download/pmut-haptics.html)**：保存后用浏览器打开。
+- **[下载完整项目与安装包](https://github.com/tenderzzz/pmut-haptics/releases/latest)**：在 Release 的 Assets 中选择项目 ZIP、wheel 或源码包。
+
+GitHub 仓库中的 HTML 文件页面用于查看源码，不会运行实验台；文件约 4.9 MB，源码预览也可能因大小限制无法显示。请使用上述在线或下载入口。
+
+离线使用时，双击本地项目根目录的 **pmut-haptics.html** 即可。 只需这一个文件，可复制或转发，不用安装 Python、不用启动本地服务。包含参数调整、声场、三维阵列几何与目标轨迹、调制、轨迹回放、实验对比和数据导出。三维图支持旋转、缩放、俯视、侧视和图片保存；绘图库已内嵌，文件约 4.9 MB，仍无外部运行依赖。
 
 使用方法、功能范围和开发说明见 [HTML 指南](docs/html.md)；数值与浏览器检查见 [HTML 验证记录](docs/html-verification.md)。
 

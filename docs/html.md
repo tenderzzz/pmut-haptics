@@ -1,6 +1,12 @@
 # 单文件 HTML 实验台
 
-## 直接打开
+## 在线或离线打开
+
+**在线运行：[pMUT 实验台](https://tenderzzz.github.io/pmut-haptics/)。**
+
+**离线使用：[下载 pmut-haptics.html](https://github.com/tenderzzz/pmut-haptics/releases/latest/download/pmut-haptics.html)**，保存后用浏览器打开。完整项目 ZIP 与 Python 安装包见 [最新 Release](https://github.com/tenderzzz/pmut-haptics/releases/latest)。
+
+GitHub 的 blob 文件页面用于查看源码，不是 HTML 运行入口；约 4.9 MB 的文件可能超出源码预览限制。在线演示由 GitHub Pages 提供，项目网址根路径的 index.html 与离线版来自同一份构建文件。
 
 打开项目根目录的 **pmut-haptics.html**，或把这一个文件复制到另一台电脑，再用现代浏览器打开。文件中已经包含界面、计算程序和绘图代码，**不需要安装 Python、Node.js，也不需要启动本地服务**。第一次打开会自动计算默认实验。
 
@@ -60,7 +66,7 @@
 .venv/bin/python -m pytest tests/test_html.py -q
 ```
 
-三维视图使用随项目提供的 Plotly.js 4.1.1，源码位于 web/vendor/，MIT 许可证一并内嵌。其余场图使用原生 Canvas。完整 HTML 约 4.9 MB，不访问 CDN，也不提供云端分享入口。三维图需要浏览器支持 WebGL；无法初始化时会提示，其他计算、场图和导出仍可使用。
+三维视图使用随项目提供的 Plotly.js 4.1.1，源码位于 web/vendor/，MIT 许可证一并内嵌。其余场图使用原生 Canvas。完整 HTML 约 4.9 MB，不访问 CDN，也不上传实验数据。三维图需要浏览器支持 WebGL；无法初始化时会提示，其他计算、场图和导出仍可使用。
 
 生成只需要 Python 标准库；数值对照测试需要项目开发环境和 Node.js。Node 仅用于开发检查，不是打开 HTML 的依赖。CI 显式准备 Node，避免意外跳过数值对照。
 

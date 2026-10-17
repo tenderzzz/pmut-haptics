@@ -7,3 +7,4 @@ dist/
 build/
 outputs/
 .DS_Store
+_site/

@@ -24,6 +24,7 @@
 - 静态检查：Ruff，All checks passed。
 - SHA256 再次通过校验：20 个文档快照文件，以及 5 组本地实验中的 37 个文件。
 - 仓库：[tenderzzz/pmut-haptics](https://github.com/tenderzzz/pmut-haptics)，包含源码、配置、测试、文档、验证快照和独立 HTML。
+- 发布入口：[在线实验台](https://tenderzzz.github.io/pmut-haptics/)与 [Release 下载](https://github.com/tenderzzz/pmut-haptics/releases/latest)。网站首页与离线 HTML 使用相同构建内容，GitHub 源码预览不作为运行入口。
 - 虚拟环境、缓存、outputs 和 dist 按忽略规则保留在本地；原实习报告与第三方论文全文位于工程目录之外。
 
 ## 独立 HTML 增补

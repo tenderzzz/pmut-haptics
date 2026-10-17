@@ -1,0 +1,38 @@
+name: deploy-demo
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "pmut-haptics.html"
+      - "scripts/build_html.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/configure-pages@v5
+      - name: Build the standalone demo and website root
+        run: |
+          python3 scripts/build_html.py
+          mkdir -p _site
+          cp pmut-haptics.html _site/index.html
+          cp pmut-haptics.html _site/pmut-haptics.html
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - uses: actions/deploy-pages@v4
+        id: deployment
