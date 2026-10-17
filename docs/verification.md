@@ -1,6 +1,6 @@
 # 交付验证记录
 
-最后交付检查：**2026-10-15**（Asia/Shanghai）。数值场景和性能测量在 2026-10-14 完成，随后修正了 Streamlit 界面的主题对比度与坐标显示比例，并新增独立 HTML。Python 计算核未再改变，HTML 使用独立实现并与之对照。
+最近发布核验：**2026-10-17**（Asia/Shanghai）；原交付检查为 2026-10-15。数值场景和性能测量在 2026-10-14 完成，随后修正了 Streamlit 界面的主题对比度与坐标显示比例，并新增独立 HTML。Python 计算核未再改变，HTML 使用独立实现并与之对照。
 
 ## 已实际通过
 
@@ -18,11 +18,11 @@
 
 最新完整测试输出见 [HTML 增补测试日志](results/html/test-report.txt)，原 33 项记录保留在 [test-report.txt](results/test-report.txt)；安装检查见 [package-smoke.json](results/package-smoke.json)。精简快照的完整性可通过 scripts/verify_artifacts.py 检查。原始完整日志位于 outputs/release-check-20261015/。
 
-## GitHub 发布前复查（2026-10-17）
+## GitHub 发布核验（2026-10-17）
 
 - 本地完整测试：43 passed，无跳过；包含离线 HTML 与维护源码一致性、浏览器/Python 数值对照。
 - 静态检查：Ruff，All checks passed。
-- 精简文档快照和本地实验记录的 SHA256 再次通过校验。
+- SHA256 再次通过校验：20 个文档快照文件，以及 5 组本地实验中的 37 个文件。
 - 仓库：[tenderzzz/pmut-haptics](https://github.com/tenderzzz/pmut-haptics)，包含源码、配置、测试、文档、验证快照和独立 HTML。
 - 虚拟环境、缓存、outputs 和 dist 按忽略规则保留在本地；原实习报告与第三方论文全文位于工程目录之外。
 
@@ -30,9 +30,9 @@
 
 已验证默认计算、振速缩放、轨迹回放、逐帧查看、配置导入、基准对比、五种导出和取消计算。确认预览端口无监听后，已加载的页面仍能改变参数并重新计算。宽屏与 390×844 窄屏布局已检查。HTML 现已补回三维阵列与目标位置，验证了参数联动、旋转缩放、视角切换、重算保留视角和 PNG 导出。浏览器自动化不支持 file://，因此本地文件协议和各品牌浏览器兼容性未列为实测。详见 [HTML 验证记录](html-verification.md)。
 
-## 已配置但未宣称完成的事项
+## 远程与平台验证范围
 
-GitHub Actions 提供 Ubuntu/macOS 的测试、构建与运行配置；远程 CI 状态见 [仓库 Actions](https://github.com/tenderzzz/pmut-haptics/actions)。首次上传前尚无远程运行结果，通过状态以实际运行记录为准。Windows 的完整基准未适配；其他平台安装与数值行为尚未实际检验。
+2026-10-17，首次提交 1dbc622 的 [GitHub Actions 验证](https://github.com/tenderzzz/pmut-haptics/actions/runs/39011404415) 已通过：Ubuntu 与 macOS 均完成依赖安装、Ruff、完整测试、离线 HTML 构建、Python 包构建和快速场景运行。后续提交状态见 [仓库 Actions](https://github.com/tenderzzz/pmut-haptics/actions)。Windows 的完整基准未适配；其他平台安装与数值行为尚未实际检验。
 
 仿真并不等于器件实测。电压到振速标定、皮肤受力/位移、人体感知和硬件闭环都不在本次交付的验证范围内。
 
