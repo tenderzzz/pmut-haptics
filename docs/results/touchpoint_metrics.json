@@ -1,0 +1,57 @@
+{
+  "pressure_peak_pa": 201.83352112867982,
+  "pressure_rms_max_pa": 142.7178514608478,
+  "spl_db_re_20uPa": 137.0689660670304,
+  "intensity_max_w_m2": 49.48587251117741,
+  "radiation_pressure_max_pa": 0.2885473615812094,
+  "force_over_displayed_plane_n": 1.925987524543502e-05,
+  "peak_x_m": 0.0,
+  "peak_y_m": 0.0,
+  "target_lateral_error_m": 0.0,
+  "pressure_x_minus6db": {
+    "width_m": 0.010263045984512916,
+    "clipped": false,
+    "reason": "ok",
+    "left_m": -0.005131522992256458,
+    "right_m": 0.005131522992256458,
+    "peak_index": 50
+  },
+  "pressure_y_minus6db": {
+    "width_m": 0.010263045984512916,
+    "clipped": false,
+    "reason": "ok",
+    "left_m": -0.005131522992256458,
+    "right_m": 0.005131522992256458,
+    "peak_index": 50
+  },
+  "radiation_x_fwhm": {
+    "width_m": 0.0075316102020397315,
+    "clipped": false,
+    "reason": "ok",
+    "left_m": -0.0037658051010198658,
+    "right_m": 0.0037658051010198658,
+    "peak_index": 50
+  },
+  "radiation_y_fwhm": {
+    "width_m": 0.0075316102020397315,
+    "clipped": false,
+    "reason": "ok",
+    "left_m": -0.0037658051010198658,
+    "right_m": 0.0037658051010198658,
+    "peak_index": 50
+  },
+  "sidelobe_x_db": -13.182352934193862,
+  "sidelobe_y_db": -13.182352934193863,
+  "plane_area_m2": 0.0016,
+  "element_count": 144,
+  "pitch_m": 0.0015676416819012796,
+  "wavelength_m": 0.0031352833638025593,
+  "sum_squared_velocity_m2_s2": 144.0,
+  "envelope_mean_square": 0.5,
+  "commanded_focus_radiation_time_peak_pa": 0.28854736158120947,
+  "plane_force_time_mean_n": 9.629937622717512e-06,
+  "simulation_seconds": 0.06458945799386129,
+  "model": "uniform baffled piston; element far-field approximation; normal-incidence force",
+  "amplitude_basis": "assumed peak surface velocity; not voltage calibrated",
+  "motion_map_basis": "carrier averaged, unmodulated; separate waveform applies envelope squared"
+}

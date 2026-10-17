@@ -1,0 +1,198 @@
+{
+  "base_config": {
+    "title": "空中静态触点",
+    "carrier_hz": 109400.0,
+    "reflection_factor": 2.0,
+    "seed": 42,
+    "medium": {
+      "sound_speed_m_s": 343.0,
+      "density_kg_m3": 1.2,
+      "attenuation_np_m": 0.0
+    },
+    "element": {
+      "radius_m": 0.000415,
+      "velocity_peak_m_s": 1.0
+    },
+    "array": {
+      "nx": 12,
+      "ny": 12,
+      "pitch_wavelengths": 0.5,
+      "apodization": "uniform",
+      "phase_error_std_deg": 0.0
+    },
+    "focus": {
+      "x_m": 0.0,
+      "y_m": 0.0,
+      "z_m": 0.05
+    },
+    "grid": {
+      "x_min_m": -0.02,
+      "x_max_m": 0.02,
+      "y_min_m": -0.02,
+      "y_max_m": 0.02,
+      "z_min_m": 0.01,
+      "z_max_m": 0.08,
+      "nx": 101,
+      "ny": 101,
+      "nz": 121
+    },
+    "modulation": {
+      "kind": "burst",
+      "frequency_hz": 100.0,
+      "duty_cycle": 0.5,
+      "depth": 1.0,
+      "duration_s": 0.05,
+      "sample_rate_hz": 20000.0
+    },
+    "trajectory": {
+      "kind": "static",
+      "radius_m": 0.005,
+      "line_length_m": 0.015,
+      "duration_s": 1.0,
+      "frames": 61,
+      "loops": 1
+    },
+    "engine": {
+      "chunk_points": 2048,
+      "max_transfer_mb": 128.0
+    }
+  },
+  "rows": [
+    {
+      "nx": 8,
+      "ny": 8,
+      "pitch_wavelengths": 0.35,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 64.0,
+      "pressure_rms_max_pa": 64.09989246765117,
+      "radiation_pressure_max_pa": 0.0582069859548947,
+      "force_over_displayed_plane_n": 1.580403102597935e-05,
+      "pressure_x_minus6db_m": 0.021860490710122082,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.015874186391846602,
+      "sidelobe_x_db": null
+    },
+    {
+      "nx": 8,
+      "ny": 8,
+      "pitch_wavelengths": 0.5,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 64.0,
+      "pressure_rms_max_pa": 63.90500411723409,
+      "radiation_pressure_max_pa": 0.057853580724920556,
+      "force_over_displayed_plane_n": 8.192615238781557e-06,
+      "pressure_x_minus6db_m": 0.015316824343743343,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.01120164260741396,
+      "sidelobe_x_db": -13.417704160442794
+    },
+    {
+      "nx": 8,
+      "ny": 8,
+      "pitch_wavelengths": 0.8,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 64.0,
+      "pressure_rms_max_pa": 63.32342664982177,
+      "radiation_pressure_max_pa": 0.056805361182774725,
+      "force_over_displayed_plane_n": 3.420332142691709e-06,
+      "pressure_x_minus6db_m": 0.009670079411190373,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.0071038156430139054,
+      "sidelobe_x_db": -12.913213955521126
+    },
+    {
+      "nx": 12,
+      "ny": 12,
+      "pitch_wavelengths": 0.35,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 144.0,
+      "pressure_rms_max_pa": 143.69059215587396,
+      "radiation_pressure_max_pa": 0.29249414606308755,
+      "force_over_displayed_plane_n": 3.784037445399993e-05,
+      "pressure_x_minus6db_m": 0.014549451425825921,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.010642233925292,
+      "sidelobe_x_db": -13.588737418159374
+    },
+    {
+      "nx": 12,
+      "ny": 12,
+      "pitch_wavelengths": 0.5,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 144.0,
+      "pressure_rms_max_pa": 142.7178514608478,
+      "radiation_pressure_max_pa": 0.2885473615812094,
+      "force_over_displayed_plane_n": 1.9260260218098817e-05,
+      "pressure_x_minus6db_m": 0.010262646885636856,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.007532421089864454,
+      "sidelobe_x_db": -13.178476243008895
+    },
+    {
+      "nx": 12,
+      "ny": 12,
+      "pitch_wavelengths": 0.8,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 144.0,
+      "pressure_rms_max_pa": 139.89971429844644,
+      "radiation_pressure_max_pa": 0.2772644343313152,
+      "force_over_displayed_plane_n": 8.049675007954288e-06,
+      "pressure_x_minus6db_m": 0.0065780926106463865,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.004839407531166832,
+      "sidelobe_x_db": -12.78225320686122
+    },
+    {
+      "nx": 16,
+      "ny": 16,
+      "pitch_wavelengths": 0.35,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 256.0,
+      "pressure_rms_max_pa": 254.14437312254617,
+      "radiation_pressure_max_pa": 0.9150008696752199,
+      "force_over_displayed_plane_n": 6.93902355948541e-05,
+      "pressure_x_minus6db_m": 0.01096244772831206,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.008037788636793696,
+      "sidelobe_x_db": -13.333409356662461
+    },
+    {
+      "nx": 16,
+      "ny": 16,
+      "pitch_wavelengths": 0.5,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 256.0,
+      "pressure_rms_max_pa": 251.15555639829836,
+      "radiation_pressure_max_pa": 0.8936060302218014,
+      "force_over_displayed_plane_n": 3.570000656211765e-05,
+      "pressure_x_minus6db_m": 0.007787625238206809,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.005723947223404933,
+      "sidelobe_x_db": -13.021583075662186
+    },
+    {
+      "nx": 16,
+      "ny": 16,
+      "pitch_wavelengths": 0.8,
+      "normalization": "per_element",
+      "velocity_peak_m_s": 1.0,
+      "sum_squared_velocity_m2_s2": 256.0,
+      "pressure_rms_max_pa": 242.81830211213804,
+      "radiation_pressure_max_pa": 0.8352631958994062,
+      "force_over_displayed_plane_n": 1.4911955860392397e-05,
+      "pressure_x_minus6db_m": 0.0050880321913815,
+      "pressure_x_width_clipped": false,
+      "radiation_x_fwhm_m": 0.003744763116144303,
+      "sidelobe_x_db": -12.568411812522719
+    }
+  ],
+  "normalization_note": "sum squared surface velocity is a proxy, not electrical power"
+}

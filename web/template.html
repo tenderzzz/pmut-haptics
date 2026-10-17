@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'; worker-src blob:; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="无需安装、无需联网的 pMUT 空中超声触觉仿真实验台。">
+<title>pMUT 空中触觉实验台</title>
+<style>/*__STYLE__*/</style>
+</head>
+<body>
+<noscript><div class="notice error">此实验台需要浏览器启用 JavaScript。启用后重新打开文件即可，无需联网。</div></noscript>
+<a class="skip" href="#workspace">跳到实验结果</a>
+<div class="app">
+<aside class="controls">
+  <div class="brand"><svg width="35" height="35" viewBox="0 0 35 35" aria-hidden="true"><g fill="currentColor"><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="7" r="2.5"/><circle cx="27" cy="7" r="2.5"/><circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="4"/><circle cx="27" cy="17" r="2.5"/><circle cx="7" cy="27" r="2.5"/><circle cx="17" cy="27" r="2.5"/><circle cx="27" cy="27" r="2.5"/></g></svg><span>pMUT <small>声场与触觉</small></span></div>
+  <details id="parameters" open><summary>实验参数<span>展开 / 收起</span></summary>
+  <form id="config-form">
+    <fieldset><legend>阵列与驱动</legend>
+      <div class="pair">
+        <label for="nx">x 阵元数<input id="nx" type="number" min="1" max="32" step="1" value="12"></label>
+        <label for="ny">y 阵元数<input id="ny" type="number" min="1" max="32" step="1" value="12"></label>
+      </div>
+      <label for="carrier">载波频率 <span>kHz</span><input id="carrier" type="number" min="20" max="600" step="0.1" value="109.4"></label>
+      <div class="pair">
+        <label for="radius">阵元半径 <span>μm</span><input id="radius" type="number" min="1" max="5000" step="1" value="415"></label>
+        <label for="pitch">间距 / λ<input id="pitch" type="number" min="0.05" max="1" step="0.05" value="0.5"></label>
+      </div>
+      <label for="velocity">峰值表面振速 <span>m/s</span><input id="velocity" type="number" min="0" max="10" step="0.1" value="1"></label>
+      <label for="apodization">阵元幅度<select id="apodization"><option value="uniform">均匀</option><option value="hann">Hann 加权</option></select></label>
+      <p class="hint">加权保持振速平方和一致，不等同于等电功率。</p>
+    </fieldset>
+    <fieldset><legend>焦点与路径</legend>
+      <div class="triple">
+        <label for="fx">x <span>mm</span><input id="fx" type="number" min="-20" max="20" step="1" value="0"></label>
+        <label for="fy">y <span>mm</span><input id="fy" type="number" min="-20" max="20" step="1" value="0"></label>
+        <label for="fz">z <span>mm</span><input id="fz" type="number" min="10" max="80" step="1" value="50"></label>
+      </div>
+      <label for="motion">触点运动<select id="motion"><option value="static">静态触点</option><option value="line">往复直线</option><option value="circle">圆形轨迹</option></select></label>
+      <div class="pair">
+        <label for="path-size" id="path-size-label">路径半径 / 半长 <span>mm</span><input id="path-size" type="number" min="0" max="20" step="0.5" value="5"></label>
+        <label for="path-duration">路径时长 <span>s</span><input id="path-duration" type="number" min="0.1" max="10" step="0.1" value="1"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>低频调制</legend>
+      <label for="modulation">调制方式<select id="modulation"><option value="burst">脉冲</option><option value="sinusoidal">正弦幅度调制</option><option value="cw">连续波</option></select></label>
+      <div class="pair">
+        <label for="mod-frequency">频率 <span>Hz</span><input id="mod-frequency" type="number" min="1" max="1000" step="1" value="100"></label>
+        <label for="duty">占空比<input id="duty" type="number" min="0.05" max="1" step="0.05" value="0.5"></label>
+      </div>
+      <label for="depth">调制深度<input id="depth" type="number" min="0" max="1" step="0.1" value="1"></label>
+    </fieldset>
+    <details class="advanced"><summary>采样与介质</summary>
+      <div class="pair">
+        <label for="grid">平面每轴网格<input id="grid" type="number" min="3" max="151" step="2" value="81"></label>
+        <label for="frames">轨迹帧数<input id="frames" type="number" min="13" max="121" step="2" value="41"></label>
+      </div>
+      <label for="attenuation">声压衰减 <span>Np/m</span><input id="attenuation" type="number" min="0" step="0.1" value="0"></label>
+      <label for="reflection">反射系数<input id="reflection" type="number" min="1" max="2" step="0.1" value="2"></label>
+      <p class="hint">默认空气：343 m/s，1.2 kg/m³。</p>
+    </details>
+    <div class="form-actions"><button class="primary" type="submit" id="run">运行仿真</button><button type="button" id="reset">重置</button></div>
+    <button type="button" class="quiet full" id="import">导入 JSON / TOML 配置</button>
+    <input type="file" id="config-file" accept=".json,.toml" hidden>
+  </form>
+  </details>
+  <div class="offline-note"><span class="status-dot"></span>在当前浏览器计算<br><small>无服务器 · 无网络依赖</small></div>
+</aside>
+<main id="workspace">
+  <header class="page-head">
+    <div><h1>空中触觉实验台</h1><p>从相控阵声场，观察表面触觉刺激。</p></div>
+    <button id="save-config" class="quiet" disabled>导出配置</button>
+  </header>
+  <p class="assumption">模型采用均匀圆活塞近似。表面振速为输入假设，刺激强度尚未经过实物标定。</p>
+  <div id="status" class="notice" role="status" aria-live="polite">正在准备默认实验…</div>
+  <div class="progress-row" id="progress-row" hidden><progress id="progress" max="1" value="0" aria-label="计算进度"></progress><button id="cancel">取消计算</button></div>
+  <nav class="tabs" role="tablist" aria-label="实验视图">
+    <button role="tab" aria-selected="true" aria-controls="field-panel" id="field-tab" tabindex="0">声场与触点</button>
+    <button role="tab" aria-selected="false" aria-controls="motion-panel" id="motion-tab" tabindex="-1">调制与移动</button>
+    <button role="tab" aria-selected="false" aria-controls="compare-panel" id="compare-tab" tabindex="-1">实验对比</button>
+    <button role="tab" aria-selected="false" aria-controls="model-panel" id="model-tab" tabindex="-1">模型与导出</button>
+  </nav>
+  <section role="tabpanel" id="field-panel" aria-labelledby="field-tab">
+    <div class="stage">
+      <div class="figure primary-figure">
+        <div class="figure-head"><h2>焦点所在平面</h2><select id="quantity" aria-label="焦平面显示量"><option value="rms">RMS 声压</option><option value="radiation">辐射压</option></select></div>
+        <canvas id="xy-chart" role="img" aria-label="目标平面的声压或辐射压热图"></canvas>
+        <p id="pointer-readout" class="hint">点击图面设定焦点位置，再运行仿真。</p>
+      </div>
+      <div class="readings">
+        <dl>
+          <div><dt>最大 RMS 声压</dt><dd id="metric-pressure">—</dd></div>
+          <div><dt>最大辐射压</dt><dd id="metric-radiation">—</dd></div>
+          <div><dt>显示平面内合力</dt><dd id="metric-force">—</dd></div>
+          <div><dt>x 方向声压 −6 dB 宽度</dt><dd id="metric-width">—</dd></div>
+        </dl>
+        <p id="geometry-note" class="hint"></p>
+        <canvas id="array-chart" role="img" aria-label="阵元位置与驱动相位示意图"></canvas>
+        <p class="hint">阵元俯视图，颜色表示驱动相位。</p>
+      </div>
+    </div>
+    <div class="figure geometry-figure" id="geometry-figure">
+      <div class="figure-head">
+        <h2 id="geometry-title">阵列几何与目标位置</h2>
+        <div class="geometry-actions" role="group" aria-label="三维观察视角">
+          <button id="geometry-reset" disabled>重置视角</button>
+          <button id="geometry-top" disabled>俯视</button>
+          <button id="geometry-side" disabled>侧视</button>
+        </div>
+      </div>
+      <p id="geometry-summary" class="hint"></p>
+      <div id="geometry-chart" role="region" aria-labelledby="geometry-title" aria-describedby="geometry-help"></div>
+      <p id="geometry-status" class="notice" role="status" hidden></p>
+      <p id="geometry-help" class="hint">拖动旋转，滚轮或双指缩放；悬停查看坐标与相位。阵元颜色表示设定焦点的驱动相位，橙色为目标位置或轨迹，三轴采用相同长度比例。</p>
+    </div>
+    <div class="secondary-grid">
+      <div class="figure"><h2>穿过焦点的竖直截面</h2><canvas id="xz-chart" role="img" aria-label="声压的 x z 竖直截面，单位 dB"></canvas></div>
+      <div class="figure"><h2>主瓣与旁瓣</h2><canvas id="profile-chart" role="img" aria-label="x 方向归一化声压剖面"></canvas><p id="profile-note" class="hint"></p></div>
+    </div>
+  </section>
+  <section role="tabpanel" id="motion-panel" aria-labelledby="motion-tab" hidden>
+    <div class="figure"><div class="figure-head"><h2>移动触点</h2><button id="play" disabled>播放轨迹</button></div>
+      <canvas id="motion-chart" role="img" aria-label="未调制的移动触点辐射压"></canvas>
+      <div class="scrubber"><label for="frame">轨迹时刻</label><input id="frame" type="range" min="0" max="0" value="0"><output id="frame-time">0 ms</output></div>
+      <p class="hint">回放展示未调制、按载波周期平均的辐射压。播放速度仅用于观察路径。</p>
+    </div>
+    <div class="figure"><h2>调制后的表面合力</h2><canvas id="wave-chart" role="img" aria-label="目标平面合力随时间变化"></canvas><p id="wave-note" class="hint"></p></div>
+  </section>
+  <section role="tabpanel" id="compare-panel" aria-labelledby="compare-tab" hidden>
+    <div class="section-head"><div><h2>比较两次实验</h2><p>先保存基准，再调整参数并运行。</p></div><button id="save-baseline" disabled>保存当前结果为基准</button></div>
+    <p id="compare-empty" class="notice">还没有基准。保存后，可以比较声压、合力和主瓣宽度。</p>
+    <div class="table-wrap" id="comparison" hidden><table><caption>相同指标口径的实验对比</caption><thead><tr><th scope="col">指标</th><th scope="col">已保存基准</th><th scope="col">当前实验</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
+    <p class="hint">比较阵元数量时，同时检查振速平方和；它不等于电功率。当前页面关闭后基准会清空。</p>
+  </section>
+  <section role="tabpanel" id="model-panel" aria-labelledby="model-tab" hidden>
+    <div class="prose">
+      <h2>从声场到表面刺激</h2>
+      <p>二维阵列的复声压经相位聚焦后，换算为 RMS 声压。采用近似局部行波与法向入射条件，估算辐射压，并对有限目标平面积分得到合力。</p>
+      <div class="equations">p<sub>RMS</sub> = |P| / √2<br>I ≈ p<sub>RMS</sub>² / (ρc)<br>Π ≈ κI / c<br>F<sub>A</sub> = ∫<sub>A</sub> Π dA</div>
+      <p>低频包络 m(t) 作用于振速与声压，辐射压和合力随 m(t)² 变化。轨迹帧与包络波形分别采样，避免把动画帧率当成调制采样率。</p>
+      <h3>如何理解这些数字</h3>
+      <ul><li>合力只覆盖当前显示的有限平面，不是全空间总力。</li><li>声压 −6 dB 宽度和辐射压半高宽是不同指标。没有完整交点时显示“超出视野”。</li><li>路径可以很细，实际触点仍受波束宽度限制。默认圆形路径的时间平均刺激未必是清晰的空心圆。</li><li>没有模拟皮肤力学、真实触觉阈值、驱动电压标定或硬件闭环。</li></ul>
+      <h3>离线版本的范围</h3>
+      <p>保留空气触觉的参数调整、声场、调制、轨迹、对比和导出。每方向最多 32 个阵元、每轴 151 个网格点、间距不超过 1λ；随机相位误差和历史水中成像请使用完整 Python 工程。导出的 TOML 可由 Python 版直接读取。数值对照记录随项目提供。</p>
+      <p>默认阵元数量、半径与载波参考 <a href="https://bsac.berkeley.edu/node/328" target="_blank" rel="noopener noreferrer">Pala 等的非接触 pMUT 研究</a>；辐射压模型参考 <a href="https://hapislab.org/public/hiroyuki_shinoda/research/pdf/08Eurohaptics_iwamoto.pdf" target="_blank" rel="noopener noreferrer">Iwamoto 等</a>。间距、焦距和振速是示例假设。只有主动点击这些文献链接时才会访问网络。</p>
+      <h3>保存这次实验</h3>
+      <div class="export-actions"><button id="export-toml" disabled>配置 TOML</button><button id="export-metrics" disabled>指标 JSON</button><button id="export-data" disabled>全部数据 JSON</button><button id="export-csv" disabled>焦平面 CSV</button></div>
+      <p class="hint">导出采用当前已计算结果；更改参数后先运行再导出。JSON 采用 SI 单位，复声压分开保存实部和虚部。</p>
+    </div>
+  </section>
+  <footer><span>pMUT 单文件实验台</span><span id="run-info">无需安装，直接打开。</span></footer>
+</main>
+</div>
+<!--
+/*__PLOTLY_LICENSE__*/
+-->
+<script>/*__PLOTLY__*/</script>
+<script>/*__CORE__*/</script>
+<script>/*__UI__*/</script>
+</body></html>

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "source_run": "outputs/verified-20261014",
+  "benchmark_run": "benchmark-final",
+  "files_sha256": {
+    "assets/circle.png": "88a5cdcd1ce4eaa264f1a99a7f88145a9df94e8caa50434397f8270f8460b13e",
+    "assets/corrected_water.png": "cf2b987592cd70247ea4204a9ff9c7d30bb2d4fae3963e15e1c1fcf2e810dc41",
+    "assets/geometry.png": "5da9d34c7fc786be7315e5b1fbde6fd4f7422572417c8d939452e9197ace36fe",
+    "assets/profiles.png": "a86ddc8a624e9dd754eacdfca38e01a951c6662af959af05b80e32d495544d53",
+    "assets/touchpoint.png": "50c3a6d73fc8626f077d83224f5bb47a86c03aa5ce59089db6a6123b59dbc2d2",
+    "benchmark.json": "ce74fa448a9fd04ae5b15e5f7ccfb8258dbaeadd1696cb43845890f0bf50afdb",
+    "corrected_metrics.json": "572a589370f7c9f26d0fe3feb031be949294f1b220b4c41542f6d051b7fb86ab",
+    "environment.json": "6be383b72c959f26bbc9c4d1e433feed36988e6279a59ae86748dff3e0d27e9e",
+    "original_metrics.json": "5c21a7275bb7c5872e8d6c44cecc6c60683fdbe456cfe0861d87ed519d6d5fc7",
+    "package-smoke.json": "3866ddbfb354253173d702efbd5f88b325b2fb6c3ec01fc6569da9b6251c5cc0",
+    "scan_fixed.json": "935651250d0dc2214aa987e3797e879538faa388ae3f3f0639d8f3d000579002",
+    "scan_per_element.json": "85ca34b2bca051248e760f919ae62ead8fcbd4c134422fc1452d8c9ea668486e",
+    "test-report.txt": "64747e8815efa37b8cea541f39e8f07486c3a653cc4c02ae4fb5979b8ec6d249",
+    "touchpoint_config.toml": "d214c8a52c3e4d2553838bad5258bf1b1dd321b35a6b781b030d8f68fdbd1ee4",
+    "touchpoint_metrics.json": "950cff9f39aa47f3e0002d0f4e0db177864782da813855e600604b1e08bcce9f",
+    "validation.json": "24e4da129be94a9cd18ae740d8a419a6b7f69ba6ed7aa3d5d3a61319211d3967",
+    "html/export-check.json": "9acdaea4a6349f7ecefab04ed26130364712b3db62c233b971722c3cff57b01a",
+    "html/test-report.txt": "9ea62a10afa40240fc12a38d5c93c51ccb9def73737fcb873847f2571691cdd2",
+    "html/geometry-default.png": "e13fea04251a502f43fff9e74e0a72d72feb1e3ad240b7ba91c8ea89c922f865",
+    "html/geometry-circle.png": "8f27afc0fac817564f47ad917d2dcdbb7293b30a644c7cec04aafb5abdcbb665"
+  }
+}

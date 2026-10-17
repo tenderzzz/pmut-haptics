@@ -1,0 +1,56 @@
+title = "快速验证"
+carrier_hz = 109400.0
+reflection_factor = 2.0
+seed = 42
+
+[medium]
+sound_speed_m_s = 343.0
+density_kg_m3 = 1.2
+attenuation_np_m = 0.0
+
+[element]
+radius_m = 0.000415
+velocity_peak_m_s = 1.0
+
+[array]
+nx = 8
+ny = 8
+pitch_wavelengths = 0.5
+apodization = "uniform"
+phase_error_std_deg = 0.0
+
+[focus]
+x_m = 0.0
+y_m = 0.0
+z_m = 0.05
+
+[grid]
+x_min_m = -0.02
+x_max_m = 0.02
+y_min_m = -0.02
+y_max_m = 0.02
+z_min_m = 0.01
+z_max_m = 0.08
+nx = 41
+ny = 41
+nz = 41
+
+[modulation]
+kind = "burst"
+frequency_hz = 100.0
+duty_cycle = 0.5
+depth = 1.0
+duration_s = 0.05
+sample_rate_hz = 20000.0
+
+[trajectory]
+kind = "static"
+radius_m = 0.005
+line_length_m = 0.015
+duration_s = 1.0
+frames = 61
+loops = 1
+
+[engine]
+chunk_points = 2048
+max_transfer_mb = 128.0

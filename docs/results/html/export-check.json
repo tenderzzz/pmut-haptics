@@ -1,0 +1,43 @@
+{
+  "checked_at": "2026-10-15",
+  "configuration": {
+    "velocity_peak_m_s": 0.5,
+    "trajectory": "circle",
+    "grid": [
+      81,
+      81,
+      101
+    ],
+    "frames": 41
+  },
+  "checks": {
+    "json_toml_config_equal": true,
+    "python_load_config": true,
+    "csv_rows": 6561,
+    "csv_json_arrays_identical": true,
+    "python_field_and_trajectory_rtol": 1e-10,
+    "full_json_shape_valid": true
+  },
+  "downloads": {
+    "pmut-config.json": {
+      "bytes": 1036,
+      "sha256": "2f1593651ad0111f5d0e4ad200e1d8827f5252ec874a4e3d234d70087dd31e8d"
+    },
+    "pmut-config.toml": {
+      "bytes": 738,
+      "sha256": "f43d237aaf7f0b03e95851fce79a98439eacfe36e1b0a473484dddb7fd75ae75"
+    },
+    "pmut-metrics.json": {
+      "bytes": 1823,
+      "sha256": "64e57bb00b61d8a0737e91aee6bf541311d38856eb84c8da34849e59e41cdf4e"
+    },
+    "pmut-target-plane.csv": {
+      "bytes": 480756,
+      "sha256": "1ff532a293ef703850d0443c2af21eb3ea5351de7797544582d2cc755650b2b9"
+    },
+    "pmut-data.json": {
+      "bytes": 10870426,
+      "sha256": "af4bae0873cff0b8829934539df0aacdac21294b4e3718507831a00a19a0c702"
+    }
+  }
+}

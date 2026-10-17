@@ -1,0 +1,146 @@
+{
+  "environment": {
+    "python": "3.12.14",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "logical_cpus": 10,
+    "dependencies": {
+      "pmut-haptics": "0.1.0",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "matplotlib": "3.11.2",
+      "streamlit": "1.65.0",
+      "plotly": "7.1.0"
+    },
+    "thread_environment": {
+      "OMP_NUM_THREADS": null,
+      "OPENBLAS_NUM_THREADS": null,
+      "MKL_NUM_THREADS": null,
+      "VECLIB_MAXIMUM_THREADS": null
+    }
+  },
+  "threads_per_worker": 1,
+  "warmup_runs": 1,
+  "repeats": 5,
+  "cases": [
+    {
+      "array_side": 8,
+      "grid_side": 32,
+      "reference": {
+        "samples_seconds": [
+          0.01147591698099859,
+          0.011427124991314486,
+          0.011314709001453593,
+          0.01151966699399054,
+          0.01162512501468882
+        ],
+        "median_seconds": 0.01147591698099859,
+        "min_seconds": 0.011314709001453593,
+        "max_seconds": 0.01162512501468882,
+        "peak_rss_bytes": 101842944,
+        "relative_l2_error": 0.0,
+        "output_shape": [
+          1024
+        ]
+      },
+      "vectorized": {
+        "samples_seconds": [
+          0.0012677089835051447,
+          0.0012607499957084656,
+          0.001227458007633686,
+          0.0012279160146135837,
+          0.0012319579836912453
+        ],
+        "median_seconds": 0.0012319579836912453,
+        "min_seconds": 0.001227458007633686,
+        "max_seconds": 0.0012677089835051447,
+        "peak_rss_bytes": 107233280,
+        "relative_l2_error": 1.608933232653838e-16,
+        "output_shape": [
+          1024
+        ]
+      },
+      "speedup_median": 9.31518536583038
+    },
+    {
+      "array_side": 12,
+      "grid_side": 64,
+      "reference": {
+        "samples_seconds": [
+          0.05166133400052786,
+          0.05234529098379426,
+          0.052009916020324454,
+          0.052023209020262584,
+          0.052390416007256135
+        ],
+        "median_seconds": 0.052023209020262584,
+        "min_seconds": 0.05166133400052786,
+        "max_seconds": 0.052390416007256135,
+        "peak_rss_bytes": 101908480,
+        "relative_l2_error": 0.0,
+        "output_shape": [
+          4096
+        ]
+      },
+      "vectorized": {
+        "samples_seconds": [
+          0.01094675000058487,
+          0.01089220799622126,
+          0.010973084019497037,
+          0.01079666701843962,
+          0.010858499997993931
+        ],
+        "median_seconds": 0.01089220799622126,
+        "min_seconds": 0.01079666701843962,
+        "max_seconds": 0.010973084019497037,
+        "peak_rss_bytes": 135282688,
+        "relative_l2_error": 3.030921080041534e-16,
+        "output_shape": [
+          4096
+        ]
+      },
+      "speedup_median": 4.776185786969047
+    },
+    {
+      "array_side": 16,
+      "grid_side": 96,
+      "reference": {
+        "samples_seconds": [
+          0.13626845899852924,
+          0.13732708297902718,
+          0.1363322499964852,
+          0.13593662498169579,
+          0.13577229200745933
+        ],
+        "median_seconds": 0.13626845899852924,
+        "min_seconds": 0.13577229200745933,
+        "max_seconds": 0.13732708297902718,
+        "peak_rss_bytes": 102072320,
+        "relative_l2_error": 0.0,
+        "output_shape": [
+          9216
+        ]
+      },
+      "vectorized": {
+        "samples_seconds": [
+          0.043871750007383525,
+          0.04368529198109172,
+          0.04365300000063144,
+          0.043322459008777514,
+          0.043598667019978166
+        ],
+        "median_seconds": 0.04365300000063144,
+        "min_seconds": 0.043322459008777514,
+        "max_seconds": 0.043871750007383525,
+        "peak_rss_bytes": 178257920,
+        "relative_l2_error": 1.2544690578029078e-16,
+        "output_shape": [
+          9216
+        ]
+      },
+      "speedup_median": 3.1216287310507442
+    }
+  ],
+  "scope": "Same analytic piston kernel, float64/complex128; excludes plots and file I/O",
+  "memory_scope": "Fresh worker process peak RSS, includes interpreter and imported libraries"
+}

@@ -1,0 +1,123 @@
+{
+  "profile": "report_original",
+  "status": "historical reproduction; known defects retained",
+  "plate_frequency_hz": [
+    81067.28016712773,
+    110546.29113699235
+  ],
+  "legacy_focus_width_mm": 79.83263598326361,
+  "parameter_scan": [
+    {
+      "elements": 4,
+      "pitch_wavelengths": 0.3,
+      "legacy_width_mm": 77.98994974874371
+    },
+    {
+      "elements": 4,
+      "pitch_wavelengths": 0.5,
+      "legacy_width_mm": 77.98994974874371
+    },
+    {
+      "elements": 4,
+      "pitch_wavelengths": 0.8,
+      "legacy_width_mm": 50.65326633165829
+    },
+    {
+      "elements": 8,
+      "pitch_wavelengths": 0.3,
+      "legacy_width_mm": 82.8140703517588
+    },
+    {
+      "elements": 8,
+      "pitch_wavelengths": 0.5,
+      "legacy_width_mm": 79.59798994974874
+    },
+    {
+      "elements": 8,
+      "pitch_wavelengths": 0.8,
+      "legacy_width_mm": 50.65326633165829
+    },
+    {
+      "elements": 16,
+      "pitch_wavelengths": 0.3,
+      "legacy_width_mm": 82.8140703517588
+    },
+    {
+      "elements": 16,
+      "pitch_wavelengths": 0.5,
+      "legacy_width_mm": 79.59798994974874
+    },
+    {
+      "elements": 16,
+      "pitch_wavelengths": 0.8,
+      "legacy_width_mm": 50.65326633165829
+    },
+    {
+      "elements": 32,
+      "pitch_wavelengths": 0.3,
+      "legacy_width_mm": 82.8140703517588
+    },
+    {
+      "elements": 32,
+      "pitch_wavelengths": 0.5,
+      "legacy_width_mm": 79.59798994974874
+    },
+    {
+      "elements": 32,
+      "pitch_wavelengths": 0.8,
+      "legacy_width_mm": 50.65326633165829
+    }
+  ],
+  "image_widths": [
+    {
+      "x_mm": 0.0,
+      "z_mm": 45.0,
+      "lateral_mm": 54.43037974683544,
+      "axial_mm": 50.88607594936709
+    },
+    {
+      "x_mm": -15.0,
+      "z_mm": 40.0,
+      "lateral_mm": 29.113924050632907,
+      "axial_mm": 40.25316455696203
+    },
+    {
+      "x_mm": 15.0,
+      "z_mm": 40.0,
+      "lateral_mm": 29.113924050632907,
+      "axial_mm": 40.25316455696203
+    },
+    {
+      "x_mm": -8.0,
+      "z_mm": 55.0,
+      "lateral_mm": 49.36708860759494,
+      "axial_mm": 38.734177215189874
+    },
+    {
+      "x_mm": 8.0,
+      "z_mm": 55.0,
+      "lateral_mm": 49.36708860759494,
+      "axial_mm": 38.734177215189874
+    }
+  ],
+  "rf_shape": [
+    8,
+    8,
+    148
+  ],
+  "diagnostics": {
+    "outer_element_weight_magnitude": 0.000782061210240483,
+    "symmetric_point_pressure_ratio": 2.844884668073078,
+    "echo_centers_after_record": 34,
+    "echo_path_count": 320,
+    "last_echo_center_us": 180.97055346605677,
+    "record_end_us": 147.447331769297
+  },
+  "historical_spl_scaling": {
+    "target_db_re_20uPa": 124,
+    "target_pressure_pa": 31.697863849222287,
+    "inferred_velocity_m_s": 0.001613177108993873,
+    "inferred_displacement_m": 3.400597496411498e-08,
+    "status": "historical arithmetic only; air/water and measurement conditions differ"
+  }
+}

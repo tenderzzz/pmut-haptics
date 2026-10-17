@@ -1,0 +1,13 @@
+{
+  "verified_on": "2026-10-15",
+  "cwd_outside_source_checkout": true,
+  "pythonpath_removed": true,
+  "core_wheel_only": true,
+  "installed_package": true,
+  "historical_data_available": true,
+  "streamlit_absent": true,
+  "default_run_rms_pa": 142.7178514608478,
+  "matches_verified_default": true,
+  "wheel_members": 21,
+  "passed": true
+}

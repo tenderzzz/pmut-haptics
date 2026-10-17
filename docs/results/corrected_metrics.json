@@ -1,0 +1,208 @@
+{
+  "profile": "report_corrected",
+  "status": "corrected simplified water model; not a haptic hardware validation",
+  "focus_pressure_minus6db": {
+    "width_m": 0.032958887168951456,
+    "clipped": false,
+    "reason": "ok",
+    "left_m": -0.016479443584475728,
+    "right_m": 0.016479443584475725,
+    "peak_index": 120
+  },
+  "isolated_psf_widths": [
+    {
+      "x_mm": 0.0,
+      "z_mm": 45.0,
+      "peak_x_mm": 0.0,
+      "peak_z_mm": 45.5,
+      "lateral": {
+        "width_m": 0.02395458498260749,
+        "clipped": false,
+        "reason": "ok",
+        "left_m": -0.011977292491303745,
+        "right_m": 0.011977292491303746,
+        "peak_index": 40
+      },
+      "axial": {
+        "width_m": null,
+        "clipped": true,
+        "reason": "boundary",
+        "left_m": null,
+        "right_m": null,
+        "peak_index": 34
+      }
+    },
+    {
+      "x_mm": -15.0,
+      "z_mm": 40.0,
+      "peak_x_mm": -15.0,
+      "peak_z_mm": 40.25,
+      "lateral": {
+        "width_m": 0.023429802377436935,
+        "clipped": false,
+        "reason": "ok",
+        "left_m": -0.026813839174662814,
+        "right_m": -0.003384036797225878,
+        "peak_index": 28
+      },
+      "axial": {
+        "width_m": null,
+        "clipped": true,
+        "reason": "boundary",
+        "left_m": null,
+        "right_m": 0.07575188104435598,
+        "peak_index": 27
+      }
+    },
+    {
+      "x_mm": 15.0,
+      "z_mm": 40.0,
+      "peak_x_mm": 15.0,
+      "peak_z_mm": 40.25,
+      "lateral": {
+        "width_m": 0.023429802377436935,
+        "clipped": false,
+        "reason": "ok",
+        "left_m": 0.0033840367972258764,
+        "right_m": 0.02681383917466281,
+        "peak_index": 52
+      },
+      "axial": {
+        "width_m": null,
+        "clipped": true,
+        "reason": "boundary",
+        "left_m": null,
+        "right_m": 0.07575188104435597,
+        "peak_index": 27
+      }
+    },
+    {
+      "x_mm": -8.0,
+      "z_mm": 55.0,
+      "peak_x_mm": -7.5,
+      "peak_z_mm": 55.25000000000001,
+      "lateral": {
+        "width_m": 0.02532987061528849,
+        "clipped": false,
+        "reason": "ok",
+        "left_m": -0.020724474216648494,
+        "right_m": 0.0046053963986399955,
+        "peak_index": 34
+      },
+      "axial": {
+        "width_m": null,
+        "clipped": true,
+        "reason": "boundary",
+        "left_m": 0.022388042107999103,
+        "right_m": null,
+        "peak_index": 47
+      }
+    },
+    {
+      "x_mm": 8.0,
+      "z_mm": 55.0,
+      "peak_x_mm": 7.5,
+      "peak_z_mm": 55.25000000000001,
+      "lateral": {
+        "width_m": 0.02532987061528849,
+        "clipped": false,
+        "reason": "ok",
+        "left_m": -0.004605396398639997,
+        "right_m": 0.020724474216648494,
+        "peak_index": 46
+      },
+      "axial": {
+        "width_m": null,
+        "clipped": true,
+        "reason": "boundary",
+        "left_m": 0.022388042107999107,
+        "right_m": null,
+        "peak_index": 47
+      }
+    }
+  ],
+  "symmetric_point_pressure_ratio": 1.0000000000000002,
+  "rf_shape": [
+    8,
+    8,
+    691
+  ],
+  "pulse_fwhm_cycles": 3.0,
+  "pulse_center_s": 0.0002219482056501792,
+  "record_end_s": 0.00069,
+  "psf_method": "Each scatterer simulated separately; widths through reconstructed global peak",
+  "parameter_scan": [
+    {
+      "elements": 4,
+      "pitch_wavelengths": 0.3,
+      "corrected_width_mm": 60.93404910980317,
+      "clipped": false
+    },
+    {
+      "elements": 4,
+      "pitch_wavelengths": 0.5,
+      "corrected_width_mm": 43.32483210081823,
+      "clipped": false
+    },
+    {
+      "elements": 4,
+      "pitch_wavelengths": 0.8,
+      "corrected_width_mm": 35.17846898621273,
+      "clipped": false
+    },
+    {
+      "elements": 8,
+      "pitch_wavelengths": 0.3,
+      "corrected_width_mm": 39.50590269679324,
+      "clipped": false
+    },
+    {
+      "elements": 8,
+      "pitch_wavelengths": 0.5,
+      "corrected_width_mm": 32.95890344676855,
+      "clipped": false
+    },
+    {
+      "elements": 8,
+      "pitch_wavelengths": 0.8,
+      "corrected_width_mm": 29.62529468992417,
+      "clipped": false
+    },
+    {
+      "elements": 16,
+      "pitch_wavelengths": 0.3,
+      "corrected_width_mm": 31.477595355475493,
+      "clipped": false
+    },
+    {
+      "elements": 16,
+      "pitch_wavelengths": 0.5,
+      "corrected_width_mm": 28.659629071470377,
+      "clipped": false
+    },
+    {
+      "elements": 16,
+      "pitch_wavelengths": 0.8,
+      "corrected_width_mm": 27.044873232921574,
+      "clipped": false
+    },
+    {
+      "elements": 32,
+      "pitch_wavelengths": 0.3,
+      "corrected_width_mm": 27.967958801805533,
+      "clipped": false
+    },
+    {
+      "elements": 32,
+      "pitch_wavelengths": 0.5,
+      "corrected_width_mm": 26.554904681967745,
+      "clipped": false
+    },
+    {
+      "elements": 32,
+      "pitch_wavelengths": 0.8,
+      "corrected_width_mm": 25.650400559826924,
+      "clipped": false
+    }
+  ]
+}

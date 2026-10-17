@@ -1,0 +1,598 @@
+# ============================================================
+# pMUT 超声波阵列成像仿真
+# ============================================================
+
+import matplotlib
+matplotlib.use('Agg')
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import special
+
+plt.rcParams.update({
+    "font.size": 12,
+    "axes.labelsize": 13,
+    "axes.titlesize": 14,
+    "figure.dpi": 150,
+    "font.family": "Microsoft YaHei",
+})
+
+print("=" * 55)
+print("  pMUT 超声波仿真环境就绪")
+print(f"  numpy    v{np.__version__}")
+print(f"  scipy    v{special.__version__ if hasattr(special, '__version__') else 'OK'}")
+print("=" * 55)
+
+# -------------------------------------------------------
+# 阶段 1: 材料参数定义
+# -------------------------------------------------------
+rho  = 7800       # 密度 [kg/m^3]
+E_m  = 70e9       # 杨氏模量 [Pa]
+nu   = 0.3        # 泼松比
+a    = 1.0e-3     # 振膜半径 [m] (1 mm)
+h1   = 55e-6      # 振膜厚度 1 [m]
+h2   = 75e-6      # 振膜厚度 2 [m]
+
+print("\n" + "=" * 55)
+print("  阶段 1.0: 材料参数")
+print("=" * 55)
+print(f"  \u03c1 = {rho} kg/m\u00b3")
+print(f"  E    = {E_m/1e9:.1f} GPa")
+print(f"  \u03bd  = {nu}")
+print(f"  a    = {a*1e3:.2f} mm")
+print(f"  h1   = {h1*1e6:.0f} \u03bcm")
+print(f"  h2   = {h2*1e6:.0f} \u03bcm")
+
+#  1.1: 弯曲刚度 D
+def bending_stiffness(h, E, nu):
+    return E * h**3 / (12 * (1 - nu**2))
+
+D1 = bending_stiffness(h1, E_m, nu)
+D2 = bending_stiffness(h2, E_m, nu)
+
+print("\n" + "-" * 55)
+print("  阶段 1.1: 弯曲刚度 D")
+print("-" * 55)
+print(f"  D(55 \u03bcm) = {D1:.4e} N\u00b7m")
+print(f"  D(75 \u03bcm) = {D2:.4e} N\u00b7m")
+
+#  1.2: 基频计算
+def clamped_plate_fundamental(D, rho, h, a):
+    """Clamped 圆板基频. \u03bb\u00b2=10.2158 (Leissa, NASA SP-160)"""
+    lam2 = 10.2158
+    return lam2 / (2 * np.pi * a**2) * np.sqrt(D / (rho * h))
+
+f1 = clamped_plate_fundamental(D1, rho, h1, a)
+f2 = clamped_plate_fundamental(D2, rho, h2, a)
+
+print("\n" + "-" * 55)
+print("  阶段 1.2: 基频预测")
+print("-" * 55)
+print(f"  f\u2081(55 \u03bcm) = {f1/1000:.2f} kHz  ({f1:.0f} Hz)")
+print(f"  f\u2082(75 \u03bcm) = {f2/1000:.2f} kHz  ({f2:.0f} Hz)")
+
+#  1.3: 与文献对比
+sone_data = {
+    "55um_open": 22960,
+    "75um_open": 23610,
+    "55um_silicone": 7550,
+    "75um_silicone": 4900,
+}
+
+print("\n" + "-" * 55)
+print("  阶段 1.3: 与文献对比 (Sone 2024)")
+print("-" * 55)
+
+comparisons = [
+    ("55 \u03bcm 开放条件", f1, sone_data["55um_open"]),
+    ("75 \u03bcm 开放条件", f2, sone_data["75um_open"]),
+    ("55 \u03bcm 硅橡胶", f1, sone_data["55um_silicone"]),
+    ("75 \u03bcm 硅橡胶", f2, sone_data["75um_silicone"]),
+]
+
+for label, calc, ref in comparisons:
+    err = (calc - ref) / ref * 100
+    print(f"  {label:18s}: 计算={calc/1000:.1f} kHz, 文献={ref/1000:.1f} kHz, 偏差={err:+.1f}%")
+
+print("\n  *** 计算偏差大是本阶段的核心发现 ***")
+print("      原因分析见报告。")
+
+# -------------------------------------------------------
+# 阶段 2: 声学参数
+# -------------------------------------------------------
+c0       = 1480      # 水中声速 [m/s]
+rho0     = 1000      # 水密度 [kg/m\u00b3]
+f_work   = sone_data["55um_silicone"]  # 以硅橡胶条件为工作频率
+omega    = 2 * np.pi * f_work
+k        = omega / c0
+wavelength = c0 / f_work
+
+print("\n" + "=" * 55)
+print("  阶段 2.0: 声学参数")
+print("=" * 55)
+print(f"  c0            = {c0} m/s")
+print(f"  \u03c1\u2080         = {rho0} kg/m\u00b3")
+print(f"  f (Sone \u7845\u6a61胶条件) = {f_work/1000:.1f} kHz")
+print(f"  \u03bb          = {wavelength*1e3:.2f} mm")
+print(f"  ka            = {k*a:.3f}")
+
+# 2.1: 轴上响应 (验证)
+def rayleigh_axis(z, k, a, u0=1e-6):
+    R = np.sqrt(z**2 + a**2)
+    return 2 * rho0 * c0 * u0 * np.abs(np.sin(k/2 * (R - z)))
+
+z_vals = np.linspace(0.1e-3, 30e-3, 500)
+p_axis = rayleigh_axis(z_vals, k, a, u0=1e-6)
+z0 = np.pi * a**2 / wavelength
+
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.plot(z_vals*1e3, p_axis, "b-", lw=1.5)
+ax.axvline(z0*1e3, color="r", ls="--", alpha=0.6, label=f"Rayleigh dist = {z0*1e3:.1f} mm")
+ax.set_xlabel("z (mm)"); ax.set_ylabel("|p| (a.u.)")
+ax.set_title(f"圆形活塞轴上声压 (f={f_work/1000:.1f} kHz)")
+ax.legend(); ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("fig_2_1_on_axis.png", dpi=150)
+print(f"\n  轴上响应图已保存")
+
+# 2.2: 2D 声场云图
+def rayleigh_2d(xg, zg, k, a, rho0, c0, u0=1e-6, N=50):
+    r_vals = np.linspace(0, a, N)
+    dr = a / N
+    p = np.zeros_like(xg, dtype=complex)
+    for i, ri in enumerate(r_vals):
+        dS = np.pi * (dr/2)**2 if i == 0 else 2*np.pi*ri*dr
+        R = np.sqrt(xg**2 + zg**2 + ri**2 - 2*xg*ri)
+        R = np.maximum(R, 1e-12)
+        p += (u0*dS/(2*np.pi)) * 1j*k*rho0*c0 * np.exp(-1j*k*R) / R
+    return p
+
+Nx, Nz = 200, 200
+x_2d = np.linspace(-8e-3, 8e-3, Nx)
+z_2d = np.linspace(0.5e-3, 15e-3, Nz)
+X, Z = np.meshgrid(x_2d, z_2d, indexing="ij")
+
+print(f"  计算 2D 声场... ({Nx}x{Nz})")
+p_2d = rayleigh_2d(X, Z, k, a, rho0, c0, u0=1e-6, N=50)
+p_2d_dB = 20 * np.log10(np.abs(p_2d) / np.max(np.abs(p_2d)) + 1e-12)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+cf = ax.contourf(X*1e3, Z*1e3, p_2d_dB, levels=40, cmap="inferno", vmin=-40, vmax=0)
+plt.colorbar(cf, ax=ax, label="归一化声压 (dB)")
+ax.set_xlabel("x (mm)"); ax.set_ylabel("z (mm)")
+ax.set_title(f"单 pMUT 声压场分布 (f={f_work/1000:.1f} kHz)")
+ax.set_aspect("equal")
+ax.plot(0, 0, "wo", ms=8)
+plt.tight_layout()
+plt.savefig("fig_2_2_sound_field.png", dpi=150)
+print(f"  2D 声场图已保存")
+
+# 2.3: 远场指向性
+def far_field_dir(theta, k, a):
+    x = k * a * np.sin(theta)
+    res = np.ones_like(x)
+    mask = np.abs(x) > 1e-10
+    res[mask] = 2 * special.jv(1, x[mask]) / x[mask]
+    return np.abs(res)
+
+theta = np.linspace(-np.pi/2, np.pi/2, 500)
+D = far_field_dir(theta, k, a)
+D_dB = 20 * np.log10(D / np.max(D) + 1e-12)
+
+half_idx = np.where(D_dB >= -6)[0]
+bw_deg = np.degrees(theta[half_idx][-1] - theta[half_idx][0]) if len(half_idx) > 0 else 0
+print(f"\n  -6dB 波束宽度 = {bw_deg:.1f}\u00b0")
+
+fig, ax = plt.subplots(subplot_kw={"projection": "polar"}, figsize=(6, 6))
+ax.plot(theta, D_dB, "b-", lw=1.5)
+ax.set_ylim(-40, 3)
+ax.set_yticks([-30, -20, -10, 0])
+ax.set_title(f"远场指向性 (f={f_work/1000:.1f} kHz, ka={k*a:.2f})", pad=20)
+plt.tight_layout()
+plt.savefig("fig_2_3_directivity.png", dpi=150)
+print(f"  指向性图已保存")
+
+# 2.4: SPL 校准
+p_ref = 20e-6
+p_at_1mm = rayleigh_axis(1e-3, k, a, u0=1e-6)
+target_spl = 124
+p_target = p_ref * 10**(target_spl/20)
+u0_scale = p_target / p_at_1mm
+
+print(f"\n  目标 SPL = {target_spl} dB re 20\u03bcPa")
+print(f"  目标声压 = {p_target:.4f} Pa")
+print(f"  需要 u0 = {1e-6*u0_scale:.2e} m/s")
+disp = 1e-6*u0_scale / (2*np.pi*f_work) * 1e6
+print(f"  对应位移 = {disp:.2f} \u03bcm")
+print(f"  Sone(2024) 实测位移 ~26\u03bcm @7550Hz (硅橡胶覆盖条件)")
+
+import glob as _g
+print("\n" + "=" * 55)
+print("  阶段 0-2 完成!")
+print("  下一阶段: 线阵波束合成 (Beamforming)")
+print("=" * 55)
+for f in sorted(_g.glob("fig_*.png")):
+    print(f"    {os.path.basename(f)}")
+
+# ============================================================
+# 阶段 3: 线阵波束合成
+# ============================================================
+
+print("\n" + "=" * 55)
+print("  阶段 3: 线阵波束合成")
+print("=" * 55)
+
+# --- 3.0: 阵列参数定义 ---
+
+# 使用 55um 开放条件谐振频率 (22960 Hz) 作为工作频率
+f_array = sone_data["55um_open"]  # 22960 Hz
+omega_array = 2 * np.pi * f_array
+k_array = omega_array / c0
+wavelength_array = c0 / f_array
+
+N_elem = 8                 # 阵元数量
+pitch = 0.5 * wavelength_array   # 半波长间距
+radius_elem = a            # 阵元半径 (1 mm)
+F_focal = 50e-3            # 焦距 50 mm
+
+array_x = (np.arange(N_elem) - (N_elem - 1) / 2) * pitch
+
+print(f"\n  工作频率 f       = {f_array/1000:.1f} kHz")
+print(f"  波长 lambda      = {wavelength_array*1e3:.1f} mm")
+print(f"  阵元数 N         = {N_elem}")
+print(f"  阵元间距 d       = {pitch*1e3:.1f} mm ({pitch/wavelength_array:.2f} lambda)")
+print(f"  阵列总宽度       = {(N_elem-1)*pitch*1e3:.1f} mm")
+print(f"  焦距 F           = {F_focal*1e3:.0f} mm")
+
+# --- 3.1: 聚焦延迟计算 ---
+
+def focusing_delays(array_x, F, c):
+    """
+    对每个阵元计算聚焦延时.
+    几何关系: 第 n 个阵元到焦点 (0, F) 的距离为 sqrt(x_n^2 + F^2)
+    需要补偿的额外传播时间为 sqrt(x_n^2 + F^2)/c - F/c
+    """
+    return np.sqrt(array_x**2 + F**2) / c - F / c
+
+delays = focusing_delays(array_x, F_focal, c0)
+print("\n  聚焦延迟 (us):")
+for n, t_delay in enumerate(delays):
+    print(f"    阵元 {n}: x = {array_x[n]*1e3:7.1f} mm,  delay = {t_delay*1e6:7.2f} us")
+
+# --- 3.2: 阵列聚焦声场计算 ---
+
+def array_piston_field(xg, zg, k, a, array_x, delays, u0=1e-6, N_div=20):
+    """
+    计算 1xN 线阵在聚焦相位下的合成声场.
+    每个阵元视为圆形活塞, 用 Rayleigh-Sommerfeld 积分离散求和.
+    delays: 每个阵元的延时(秒), 通过 e^(j*omega*delay) 转化为相位.
+    """
+    p_total = np.zeros_like(xg, dtype=complex)
+    omega_k = k * c0
+
+    for n, x_n in enumerate(array_x):
+        # 该阵元相对于场点的位置
+        x_rel = xg - x_n
+        R = np.sqrt(x_rel**2 + zg**2)
+
+        # 圆形活塞自身的方向性 (远场近似, 直接用于近场简化模型)
+        # 对每个阵元内的小面元积分, 这里用解析近似:
+        # 单个活塞在距离 R 处的压力 ~ (j*rho*c*k/(2*pi)) * u0 * area * D(theta) * exp(-jkR)/R
+        theta_n = np.arctan2(x_rel, zg)
+        sin_theta = np.sin(theta_n)
+        x_bessel = k * a * sin_theta
+        directivity = np.ones_like(x_bessel)
+        mask = np.abs(x_bessel) > 1e-10
+        directivity[mask] = 2 * special.jv(1, x_bessel[mask]) / x_bessel[mask]
+
+        area = np.pi * a**2
+        R_safe = np.maximum(R, 1e-12)
+
+        # 聚焦相位: 先到达焦点者先发射 (补偿), 即乘以 e^{+j*omega*delay}
+        phase = 1j * k * c0 * delays[n]
+        p_total += (1j * k * rho0 * c0 * u0 * area / (2 * np.pi)
+                    * directivity * np.exp(-1j * k * R_safe) / R_safe
+                    * np.exp(1j * phase))
+
+    return p_total
+
+# 计算聚焦声场 (在焦点附近区域)
+x_focal = np.linspace(-60e-3, 60e-3, 240)
+z_focal = np.linspace(10e-3, 100e-3, 240)
+XF, ZF = np.meshgrid(x_focal, z_focal, indexing="ij")
+
+print(f"\n  计算阵列聚焦声场... ({XF.shape[0]}x{XF.shape[1]})")
+p_array = array_piston_field(XF, ZF, k_array, radius_elem,
+                             array_x, delays, u0=1e-6, N_div=20)
+p_array_dB = 20 * np.log10(np.abs(p_array) / np.max(np.abs(p_array)) + 1e-12)
+
+fig, ax = plt.subplots(figsize=(9, 5))
+cf = ax.contourf(XF*1e3, ZF*1e3, p_array_dB, levels=40,
+                 cmap="inferno", vmin=-40, vmax=0)
+plt.colorbar(cf, ax=ax, label="归一化声压 (dB)")
+ax.plot(0, F_focal*1e3, "w+", ms=15, mew=3, label="焦点")
+ax.plot(array_x*1e3, np.zeros_like(array_x)*1e3, "wo", ms=5, label="阵元")
+ax.set_xlabel("x (mm)"); ax.set_ylabel("z (mm)")
+ax.set_title(f"8 阵元聚焦声场 (f={f_array/1000:.1f} kHz, F={F_focal*1e3:.0f} mm)")
+ax.legend(loc="upper right")
+ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("fig_3_2_focused_field.png", dpi=150)
+print(f"  聚焦声场图已保存")
+
+# 焦点处的横向 -6dB 波束宽度
+iz_focal = np.argmin(np.abs(z_focal - F_focal))
+lateral_profile = np.abs(p_array[:, iz_focal])
+lateral_profile_db = 20 * np.log10(lateral_profile / np.max(lateral_profile) + 1e-12)
+half_idx = np.where(lateral_profile_db >= -6)[0]
+if len(half_idx) > 0:
+    bw_mm = (x_focal[half_idx][-1] - x_focal[half_idx][0]) * 1e3
+else:
+    bw_mm = 0
+
+print(f"\n  焦点处横向 -6dB 波束宽度 = {bw_mm:.2f} mm")
+print(f"  理论衍射极限 (F#=F/D): lambda*F/D = {wavelength_array*F_focal/((N_elem-1)*pitch)*1e3:.2f} mm")
+
+# 焦点横向剖面图
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.plot(x_focal*1e3, lateral_profile_db, "b-", lw=1.5)
+ax.axhline(-6, color="r", ls="--", alpha=0.6, label="-6 dB")
+ax.fill_between(x_focal*1e3, -50, lateral_profile_db,
+                where=(lateral_profile_db >= -6), color="red", alpha=0.15)
+ax.set_xlabel("x (mm)"); ax.set_ylabel("归一化声压 (dB)")
+ax.set_title(f"焦点横向剖面 (F={F_focal*1e3:.0f} mm, N={N_elem})")
+ax.legend(); ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("fig_3_2_lateral_profile.png", dpi=150)
+print(f"  横向剖面图已保存")
+
+# --- 3.3: 参数扫描 (阵元数/间距对分辨率的影响) ---
+
+print("\n  参数扫描: 阵元数 N 与间距 d 对 -6dB 分辨率的影响...")
+
+sweep_N = [4, 8, 16, 32]
+sweep_pitch_ratio = [0.3, 0.5, 0.8]
+
+res_matrix = np.zeros((len(sweep_N), len(sweep_pitch_ratio)))
+
+for i, N_test in enumerate(sweep_N):
+    for j, pitch_ratio in enumerate(sweep_pitch_ratio):
+        pitch_test = pitch_ratio * wavelength_array
+        array_x_test = (np.arange(N_test) - (N_test - 1) / 2) * pitch_test
+        delays_test = focusing_delays(array_x_test, F_focal, c0)
+
+        # 在焦点附近较窄范围内计算横向剖面, 降低计算量
+        x_test = np.linspace(-80e-3, 80e-3, 200)
+        z_test = np.array([F_focal])
+        XT, ZT = np.meshgrid(x_test, z_test, indexing="ij")
+        p_test = array_piston_field(XT, ZT, k_array, radius_elem,
+                                    array_x_test, delays_test, u0=1e-6)
+        profile_test = 20 * np.log10(np.abs(p_test[:, 0]) / np.max(np.abs(p_test[:, 0])) + 1e-12)
+        idx_half = np.where(profile_test >= -6)[0]
+        if len(idx_half) > 0:
+            res_matrix[i, j] = (x_test[idx_half][-1] - x_test[idx_half][0]) * 1e3
+        else:
+            res_matrix[i, j] = np.nan
+
+# 画参数扫描结果
+fig, ax = plt.subplots(figsize=(8, 5))
+for j, pitch_ratio in enumerate(sweep_pitch_ratio):
+    ax.plot(sweep_N, res_matrix[:, j], "o-", lw=2,
+            label=f"d = {pitch_ratio:.1f} lambda")
+ax.set_xlabel("阵元数 N")
+ax.set_ylabel("焦点 -6dB 波束宽度 (mm)")
+ax.set_title(f"分辨率 vs 阵元数/间距 (F={F_focal*1e3:.0f} mm)")
+ax.legend()
+ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("fig_3_3_resolution_sweep.png", dpi=150)
+print(f"  参数扫描图已保存")
+
+# ============================================================
+# 阶段 4: 成像仿真
+# ============================================================
+
+print("\n" + "=" * 55)
+print("  阶段 4: 成像仿真 (B-Mode)")
+print("=" * 55)
+
+# --- 4.0: 参数定义与散射体放置 ---
+
+f_img = f_array
+k_img = k_array
+c_img = c0
+
+# 散射体位置 (x, z) 单位: m
+scatterers = np.array([
+    [0.0,  45e-3],   # 中心焦点附近
+    [-15e-3, 40e-3],
+    [15e-3,  40e-3],
+    [-8e-3,  55e-3],
+    [8e-3,   55e-3],
+])
+
+scatterer_strength = np.ones(len(scatterers))  # 相同反射强度
+
+print(f"\n  散射体数量: {len(scatterers)}")
+for s in scatterers:
+    print(f"    ({s[0]*1e3:6.1f} mm, {s[1]*1e3:6.1f} mm)")
+
+# 成像区域
+x_img_min, x_img_max = -50e-3, 50e-3
+z_img_min, z_img_max = 20e-3, 80e-3
+
+# --- 4.1: 合成孔径回波模拟 ---
+
+def simulate_synthetic_aperture(array_x, scatterers, k, c, t_span, fs,
+                                pulse_width=3, u0=1e-6):
+    """
+    合成孔径模式: 每个阵元依次发射, 所有阵元同时接收.
+    返回 rf_data: shape (N_tx, N_rx, N_t)
+    """
+    N_elem = len(array_x)
+    N_scat = len(scatterers)
+    N_t = len(t_span)
+    dt = 1.0 / fs
+
+    rf = np.zeros((N_elem, N_elem, N_t))
+
+    for tx in range(N_elem):
+        for scat_idx, (xs, zs) in enumerate(scatterers):
+            # 发射路径: 阵元 tx -> 散射体
+            dist_tx = np.sqrt((array_x[tx] - xs)**2 + zs**2)
+            # 接收路径: 散射体 -> 阵元 rx
+            dist_rx = np.sqrt((array_x - xs)**2 + zs**2)
+            total_dist = dist_tx + dist_rx
+            travel_time = total_dist / c
+
+            # 简化脉冲: 3 个周期的正弦波包络
+            # 每个接收阵元独立计算
+            for rx in range(N_elem):
+                # 信号在 travel_time 处到达
+                t_center = travel_time[rx]
+                # 使用高斯包络调制正弦脉冲
+                sigma = pulse_width / (2 * np.pi * k * c / (2*np.pi))
+                # 简化: 用固定时间宽度
+                t_rel = t_span - t_center
+                pulse = np.exp(-(t_rel / (pulse_width * 2e-5))**2) * np.sin(2*np.pi*k*c/(2*np.pi) * t_rel)
+                # 幅度: 1/R^2 (球面衰减)
+                amplitude = u0 * scatterer_strength[scat_idx] / (dist_tx * dist_rx[rx] + 1e-12)
+                rf[tx, rx, :] += amplitude * pulse
+
+    return rf
+
+# 时间轴参数
+fs = 1e6          # 采样率 1 MHz (对 23 kHz 信号足够)
+t_max = (2 * np.sqrt(60e-3**2 + 40e-3**2)) / c_img + 50e-6
+t_span = np.arange(0, t_max, 1/fs)
+
+print(f"\n  时间采样: fs = {fs/1e3:.0f} kHz, 时长 = {t_max*1e3:.2f} ms, 点数 = {len(t_span)}")
+print(f"  合成孔径仿真中...")
+
+rf_data = simulate_synthetic_aperture(
+    array_x, scatterers, k_img, c_img, t_span, fs,
+    pulse_width=3, u0=1e-6
+)
+
+print(f"  回波数据维度: {rf_data.shape}")
+
+# --- 4.2: 延时叠加波束合成 ---
+
+def delay_and_sum_beamform(rf_data, array_x, t_span, c, x_grid, z_grid):
+    """
+    合成孔径延时叠加成像:
+    对每个成像点 (xi, zi), 计算所有 (tx, rx) 组合的往返时间,
+    取对应时刻的回波幅度求和.
+    """
+    N_elem = len(array_x)
+    image = np.zeros((len(x_grid), len(z_grid)))
+
+    for i, xi in enumerate(x_grid):
+        for j, zi in enumerate(z_grid):
+            total = 0.0
+            for tx in range(N_elem):
+                dist_tx = np.sqrt((array_x[tx] - xi)**2 + zi**2)
+                for rx in range(N_elem):
+                    dist_rx = np.sqrt((array_x[rx] - xi)**2 + zi**2)
+                    travel_time = (dist_tx + dist_rx) / c
+                    idx_t = int(travel_time * fs)
+                    if 0 <= idx_t < len(t_span):
+                        total += rf_data[tx, rx, idx_t]
+            image[i, j] = np.abs(total)
+
+    return image
+
+# 成像网格
+x_img_grid = np.linspace(x_img_min, x_img_max, 80)
+z_img_grid = np.linspace(z_img_min, z_img_max, 80)
+
+print(f"\n  延时叠加成像中... ({len(x_img_grid)}x{len(z_img_grid)})")
+bimage = delay_and_sum_beamform(rf_data, array_x, t_span, c_img,
+                                x_img_grid, z_img_grid)
+
+# 归一化 + 对数压缩
+bimage_norm = bimage / np.max(bimage)
+bimage_db = 20 * np.log10(bimage_norm + 1e-6)
+
+# 显示 B 模式图像
+fig, ax = plt.subplots(figsize=(9, 6))
+XI, ZI = np.meshgrid(x_img_grid*1e3, z_img_grid*1e3, indexing="ij")
+cf = ax.pcolormesh(XI, ZI, bimage_db, cmap="gray", vmin=-40, vmax=0,
+                   shading="auto")
+plt.colorbar(cf, ax=ax, label="强度 (dB)")
+for scat_idx, s in enumerate(scatterers):
+    ax.plot(s[0]*1e3, s[1]*1e3, "ro", ms=4,
+            label="真实散射体" if scat_idx == 0 else "")
+ax.set_xlabel("x (mm)"); ax.set_ylabel("z (mm)")
+ax.set_title("B-Mode 图像 (延时叠加重建)")
+ax.legend(loc="upper right")
+ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("fig_4_2_bmode_image.png", dpi=150)
+print(f"  B-Mode 图像已保存")
+
+# --- 4.3: 成像质量评估 ---
+
+print("\n  --- 成像质量评估 ---")
+
+# 对每个散射体, 在其真实位置附近找重建峰值
+for s_idx, (xs, zs) in enumerate(scatterers):
+    ix = np.argmin(np.abs(x_img_grid - xs))
+    iz = np.argmin(np.abs(z_img_grid - zs))
+
+    # 横向剖面
+    lateral = bimage_db[:, iz]
+    axial = bimage_db[ix, :]
+
+    # -6dB 宽度
+    lateral_db_rel = lateral - np.max(lateral)
+    axial_db_rel = axial - np.max(axial)
+
+    lat_half = np.where(lateral_db_rel >= -6)[0]
+    axi_half = np.where(axial_db_rel >= -6)[0]
+
+    if len(lat_half) > 0:
+        lat_width = (x_img_grid[lat_half][-1] - x_img_grid[lat_half][0]) * 1e3
+    else:
+        lat_width = np.nan
+    if len(axi_half) > 0:
+        axi_width = (z_img_grid[axi_half][-1] - z_img_grid[axi_half][0]) * 1e3
+    else:
+        axi_width = np.nan
+
+    print(f"  散射体 {s_idx} ({xs*1e3:.1f}, {zs*1e3:.1f}) mm:")
+    print(f"    横向 -6dB 宽度 = {lat_width:.1f} mm")
+    print(f"    轴向 -6dB 宽度 = {axi_width:.1f} mm")
+
+# 点扩散函数 (PSF) 横向剖面图 (以中心散射体为例)
+ix_center = np.argmin(np.abs(x_img_grid - 0))
+iz_center = np.argmin(np.abs(z_img_grid - 45e-3))
+psf_lateral = bimage_db[:, iz_center]
+psf_axial = bimage_db[ix_center, :]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+axes[0].plot(x_img_grid*1e3, psf_lateral, "b-", lw=1.5)
+axes[0].axhline(-6, color="r", ls="--", alpha=0.5)
+axes[0].set_xlabel("x (mm)"); axes[0].set_ylabel("强度 (dB)")
+axes[0].set_title("横向 PSF")
+axes[0].grid(alpha=0.3)
+
+axes[1].plot(z_img_grid*1e3, psf_axial, "b-", lw=1.5)
+axes[1].axhline(-6, color="r", ls="--", alpha=0.5)
+axes[1].set_xlabel("z (mm)"); axes[1].set_ylabel("强度 (dB)")
+axes[1].set_title("轴向 PSF")
+axes[1].grid(alpha=0.3)
+
+plt.tight_layout()
+plt.savefig("fig_4_3_psf.png", dpi=150)
+print(f"  PSF 图已保存")
+
+print("\n" + "=" * 55)
+print("  阶段 0-4 全部完成!")
+print("  成果: 单阵元 -> 阵列聚焦 -> B-Mode 成像")
+print("=" * 55)
+
+print("\n  最终生成的示意图文件:")
+for f in sorted(_g.glob("fig_*.png")):
+    print(f"    {os.path.basename(f)}")
+

@@ -1,0 +1,23 @@
+name: numerical-validation
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.6"
+      - run: uv python install 3.12
+      - run: uv sync --frozen --no-editable --group dev --extra demo --python 3.12
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync pytest
+      - run: uv run --no-sync python scripts/build_html.py
+      - run: uv build
+      - run: uv run --no-sync pmut-haptics run --config configs/quick.toml --output outputs/ci-smoke

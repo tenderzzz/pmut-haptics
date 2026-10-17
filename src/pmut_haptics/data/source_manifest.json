@@ -1,0 +1,37 @@
+{
+  "restored_code_sha256": "4895a17ac3d02285d90fc19cfb5372eacee3ac5511bd85f6c06c8b0614a74401",
+  "restored_code_lines": 598,
+  "normalization": "Replace U+00A0 spaces only; no numerical changes",
+  "nonbreaking_spaces_replaced": 923,
+  "appendix_pdf_pages": "17-31",
+  "sources": [
+    {
+      "relative_source": "上海交通大学学生暑期实习报告.pdf",
+      "title": "Internship report",
+      "doi": null,
+      "role": "Historical numerical baseline",
+      "sha256": "74d03d5b783554d1361916f7483b52654aaf435d248dde5b09bc5637c95d7fae"
+    },
+    {
+      "relative_source": "传感器/New Folder/s41598-024-52630-2.pdf",
+      "title": "Fingertip tactile sensation via piezoelectric micromachined ultrasonic transducers with an amplified interface",
+      "doi": "10.1038/s41598-024-52630-2",
+      "role": "Contact-device background; not airborne calibration",
+      "sha256": "b78872f7af48e77ce8157f4bc41f5c01297de26814df00f935c89da3372ec1cf"
+    },
+    {
+      "relative_source": "传感器/New Folder/3544548.3581547.pdf",
+      "title": "Flat Panel Haptics: Embedded Electroosmotic Pumps for Scalable Shape Displays",
+      "doi": "10.1145/3544548.3581547",
+      "role": "Electroosmotic technology comparison",
+      "sha256": "f2c02cbf20b70fcd1046716d9362dad38144d8d0ac0c64b7e62a791f36e176bb"
+    },
+    {
+      "relative_source": "传感器/New Folder/s41378-025-01042-x.pdf",
+      "title": "Electroosmotic hydraulic-based haptic reproduction of human pulse with high accuracy for remote diagnosis",
+      "doi": "10.1038/s41378-025-01042-x",
+      "role": "Electroosmotic dynamics and evaluation background",
+      "sha256": "fb4a010a2113a5ce43fe421c9810986e5415206e2db7d4e4e25c8a6d39b1b06c"
+    }
+  ]
+}
