@@ -13,6 +13,7 @@ from .acoustics import (
     transfer_from_config,
 )
 from .config import SimulationConfig
+from .imperfections import generate_sample, validate_sample
 from .metrics import plane_force, plane_metrics, stimulus
 from .stimulation import focal_trajectory, waveform
 
@@ -24,11 +25,13 @@ class SimulationResult:
     metrics: dict
 
 
-def simulate(config: SimulationConfig) -> SimulationResult:
+def simulate(config: SimulationConfig, sample=None) -> SimulationResult:
     config.validate()
     started = perf_counter()
-    positions = array_positions(config)
-    weights = focusing_weights(positions, focus_point(config), config)
+    nominal = array_positions(config)
+    sample = generate_sample(config) if sample is None else sample
+    positions = validate_sample(sample, nominal, config.element.radius_m)
+    weights = focusing_weights(nominal, focus_point(config), config, sample)
     g = config.grid
     xs = np.linspace(g.x_min_m, g.x_max_m, g.nx)
     ys = np.linspace(g.y_min_m, g.y_max_m, g.ny)
@@ -45,7 +48,7 @@ def simulate(config: SimulationConfig) -> SimulationResult:
                                         config.medium.sound_speed_m_s, config.reflection_factor)
     times, envelope = waveform(config.modulation)
     path_times, path = focal_trajectory(config)
-    frame_weights = np.column_stack([focusing_weights(positions, p, config) for p in path])
+    frame_weights = np.column_stack([focusing_weights(nominal, p, config, sample) for p in path])
     if len(path) == 1:
         frames_radiation = radiation[None, ...]
     else:
@@ -70,6 +73,11 @@ def simulate(config: SimulationConfig) -> SimulationResult:
         force_baseline = np.full_like(times, frame_force[0])
         mean_motion = radiation
     arrays = {
+        "nominal_positions_m": nominal,
+        "error_phase_rad": np.asarray(sample["phase_rad"]),
+        "error_amplitude_gain": np.asarray(sample["amplitude_gain"]),
+        "error_offsets_m": np.asarray(sample["offsets_m"]),
+        "error_active": np.asarray(sample["active"]),
         "element_positions_m": positions, "velocity_weights_m_s": weights,
         "x_m": xs, "y_m": ys, "z_m": zs,
         "pressure_xy_peak_pa": pressure, "pressure_xz_peak_pa": pressure_xz,
@@ -83,6 +91,10 @@ def simulate(config: SimulationConfig) -> SimulationResult:
         "trajectory_mean_unmodulated_radiation_pa": mean_motion,
     }
     metrics.update({
+        "model_version": "2.0",
+        "sample_rng": sample["version"], "sample_seed": sample["seed"],
+        "target_pressure_rms_pa": float(abs(field_pressure(
+            focus_point(config)[None, :], positions, weights, config)[0])/np.sqrt(2)),
         "element_count": len(positions), "pitch_m": config.pitch_m,
         "wavelength_m": config.wavelength_m,
         "sum_squared_velocity_m2_s2": float(np.sum(abs(weights)**2)),

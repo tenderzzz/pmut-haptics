@@ -108,7 +108,8 @@ def test_single_html_is_self_contained_and_current():
     assets = AssetParser()
     assets.feed(html)
     assert not assets.resources
-    app_source = (ROOT/"web/core.js").read_text() + (ROOT/"web/ui.js").read_text()
+    app_source = "\n".join((ROOT/"web"/name).read_text() for name in
+                           ["core.js", "ui.js", "tasks.js", "library.js", "lab.js"])
     assert "fetch(" not in app_source and "XMLHttpRequest" not in app_source
     assert "connect-src 'none'" in html
     # The embedded Plotly distribution includes unused network-capable chart types.
@@ -119,6 +120,9 @@ def test_single_html_is_self_contained_and_current():
                          ("/*__PLOTLY_LICENSE__*/", "vendor/LICENSE-plotly.txt"),
                          ("/*__PLOTLY__*/", "vendor/plotly.min.js"),
                          ("/*__CORE__*/", "core.js"),
+                         ("/*__TASKS__*/", "tasks.js"),
+                         ("/*__LIBRARY__*/", "library.js"),
+                         ("/*__LAB__*/", "lab.js"),
                          ("/*__UI__*/", "ui.js")]:
         template = template.replace(marker, (ROOT/"web"/file).read_text())
     assert html == template

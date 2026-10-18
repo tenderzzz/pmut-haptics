@@ -31,7 +31,9 @@ with tarfile.open(sdist, "r:gz") as source:
 
 required = {"pmut-haptics.html", "web/core.js", "web/ui.js", "README.md",
             "docs/html.md", "tests/test_html.py", "tests/browser_probe.cjs",
-            "web/vendor/plotly.min.js", "web/vendor/LICENSE-plotly.txt"}
+            "web/vendor/plotly.min.js", "web/vendor/LICENSE-plotly.txt",
+            "web/tasks.js", "web/library.js", "web/lab.js", "docs/laboratory.md",
+            "tests/test_laboratory.py", "tests/browser_laboratory.cjs"}
 if not required.issubset(files):
     raise ValueError(f"Source package is incomplete: {required - files.keys()}")
 if files["pmut-haptics.html"] != html.read_bytes():

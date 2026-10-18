@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "kind": "sweep",
+  "config": {
+    "schema_version": 2,
+    "title": "空中静态触点",
+    "carrier_hz": 109400.0,
+    "reflection_factor": 2.0,
+    "seed": 42,
+    "medium": {
+      "sound_speed_m_s": 343.0,
+      "density_kg_m3": 1.2,
+      "attenuation_np_m": 0.0
+    },
+    "element": {
+      "radius_m": 0.000415,
+      "velocity_peak_m_s": 1.0
+    },
+    "array": {
+      "nx": 12,
+      "ny": 12,
+      "pitch_wavelengths": 0.5,
+      "apodization": "uniform",
+      "phase_error_std_deg": 0.0,
+      "pitch_mode": "wavelength",
+      "pitch_m": 0.0015676416819012796
+    },
+    "imperfections": {
+      "amplitude_cv": 0.0,
+      "position_std_m": 0.0,
+      "failure_probability": 0.0,
+      "phase_bits": 0,
+      "rng": "portable-v1"
+    },
+    "focus": {
+      "x_m": 0.0,
+      "y_m": 0.0,
+      "z_m": 0.05
+    },
+    "grid": {
+      "x_min_m": -0.02,
+      "x_max_m": 0.02,
+      "y_min_m": -0.02,
+      "y_max_m": 0.02,
+      "z_min_m": 0.01,
+      "z_max_m": 0.08,
+      "nx": 51,
+      "ny": 51,
+      "nz": 61
+    },
+    "modulation": {
+      "kind": "burst",
+      "frequency_hz": 100.0,
+      "duty_cycle": 0.5,
+      "depth": 1.0,
+      "duration_s": 0.05,
+      "sample_rate_hz": 20000.0
+    },
+    "trajectory": {
+      "kind": "static",
+      "radius_m": 0.005,
+      "line_length_m": 0.015,
+      "duration_s": 1.0,
+      "frames": 61,
+      "loops": 1
+    },
+    "engine": {
+      "chunk_points": 2048,
+      "max_transfer_mb": 128.0
+    }
+  },
+  "parameter": "focus.z_m",
+  "start": 0.03,
+  "stop": 0.07,
+  "count": 9,
+  "normalization": "fixed_sum_squared_velocity",
+  "frequency_pitch": "physical"
+}

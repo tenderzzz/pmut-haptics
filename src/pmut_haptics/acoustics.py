@@ -26,7 +26,7 @@ def jinc(value: np.ndarray) -> np.ndarray:
     return out
 
 
-def focusing_weights(positions, target, config: SimulationConfig) -> np.ndarray:
+def focusing_weights(positions, target, config: SimulationConfig, sample=None) -> np.ndarray:
     """Peak surface velocity phasors. Apodization keeps sum(|u|^2) unchanged."""
     positions = np.asarray(positions, dtype=float)
     target = np.asarray(target, dtype=float)
@@ -38,11 +38,16 @@ def focusing_weights(positions, target, config: SimulationConfig) -> np.ndarray:
             return np.hanning(n) if n >= 3 else np.ones(n)
         amplitude = np.outer(window(config.array.ny), window(config.array.nx)).ravel()
         amplitude *= np.sqrt(len(amplitude) / np.sum(amplitude**2))
-    if config.array.phase_error_std_deg:
-        # The same element error is used at every focal point.
-        phase += np.random.default_rng(config.seed).normal(
-            0, np.deg2rad(config.array.phase_error_std_deg), len(positions)
-        )
+    from .imperfections import generate_sample
+    if sample is None:
+        sample = generate_sample(config)
+    bits = config.imperfections.phase_bits
+    if bits:
+        step = 2 * np.pi / (2**bits)
+        phase = np.floor(phase / step + 0.5) * step
+    phase += np.asarray(sample["phase_rad"])
+    amplitude *= np.asarray(sample["amplitude_gain"]) * np.asarray(sample["active"])
+
     return config.element.velocity_peak_m_s * amplitude * np.exp(1j * phase)
 
 

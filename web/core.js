@@ -2,10 +2,11 @@
 function createPmutKernel() {
   "use strict";
   const defaults = {
-    title: "空中静态触点", carrier_hz: 109400, reflection_factor: 2, seed: 42,
+    schema_version:2, title: "空中静态触点", carrier_hz: 109400, reflection_factor: 2, seed: 42,
     medium: {sound_speed_m_s:343, density_kg_m3:1.2, attenuation_np_m:0},
     element: {radius_m:.000415, velocity_peak_m_s:1},
-    array: {nx:12, ny:12, pitch_wavelengths:.5, apodization:"uniform", phase_error_std_deg:0},
+    array: {nx:12, ny:12, pitch_wavelengths:.5, apodization:"uniform", phase_error_std_deg:0, pitch_mode:"wavelength", pitch_m:.0015676416819012796},
+    imperfections:{amplitude_cv:0,position_std_m:0,failure_probability:0,phase_bits:0,rng:"portable-v1"},
     focus: {x_m:0, y_m:0, z_m:.05},
     grid: {x_min_m:-.02,x_max_m:.02,y_min_m:-.02,y_max_m:.02,z_min_m:.01,z_max_m:.08,nx:81,ny:81,nz:101},
     modulation: {kind:"burst",frequency_hz:100,duty_cycle:.5,depth:1,duration_s:.05,sample_rate_hz:20000},
@@ -28,8 +29,10 @@ function createPmutKernel() {
     }
     return out;
   }
-  function validate(input) {
+  function validate(input,diagnostic=false) {
+    const legacy=!Object.hasOwn(input,"schema_version");
     const c=merge(defaults,input,"");
+    if(legacy){c.schema_version=1;if(!input.imperfections)c.imperfections.rng="legacy";}
     const a=c.array,g=c.grid,m=c.modulation,t=c.trajectory;
     const positive=[c.carrier_hz,c.medium.sound_speed_m_s,c.medium.density_kg_m3,
       c.element.radius_m,a.pitch_wavelengths,c.focus.z_m,m.frequency_hz,m.duration_s,
@@ -38,17 +41,24 @@ function createPmutKernel() {
     if(c.carrier_hz<20000||c.carrier_hz>600000) throw Error("HTML 版载波范围为 20–600 kHz。");
     if(c.element.velocity_peak_m_s<0||c.element.velocity_peak_m_s>10) throw Error("振速须为 0–10 m/s。");
     if(c.medium.attenuation_np_m<0) throw Error("衰减系数不能为负数。");
-    if(a.phase_error_std_deg!==0) throw Error("HTML 版暂不模拟随机相位误差，请设为 0；该实验可在 Python 版运行。");
+    const e=c.imperfections;
+    if(![1,2].includes(c.schema_version))throw Error("不支持的配置版本。");
+    if(!["wavelength","physical"].includes(a.pitch_mode)||a.pitch_m<=0)throw Error("物理间距须为正数。");
+    if(a.phase_error_std_deg<0||e.amplitude_cv<0||e.amplitude_cv>2||e.position_std_m<0||
+       e.failure_probability<0||e.failure_probability>1||!Number.isInteger(e.phase_bits)||e.phase_bits<0||e.phase_bits>16)
+      throw Error("误差参数无效：幅度 CV 0–2、失效比例 0–1、相位位数 0–16。");
+    if(!["legacy","portable-v1"].includes(e.rng))throw Error("未知的随机算法版本。");
+    if(e.rng==="legacy"&&a.phase_error_std_deg!==0)throw Error("旧版随机相位请用 Python 复现；在误差设置中选择 portable-v1 可新建试验。");
     if(!Number.isSafeInteger(c.seed)||c.seed<0) throw Error("种子须为非负整数。");
     for(const value of [a.nx,a.ny,g.nx,g.ny,g.nz,t.frames,t.loops,c.engine.chunk_points])
       if(!Number.isSafeInteger(value)) throw Error("阵元数、网格数、帧数与周期数必须是整数。");
     if(a.nx<1||a.ny<1||a.nx>32||a.ny>32) throw Error("HTML 版每个方向支持 1–32 个阵元。");
-    if(a.pitch_wavelengths>1) throw Error("HTML 版间距最多为 1 个波长。");
-    if(a.pitch_wavelengths*c.medium.sound_speed_m_s/c.carrier_hz<2*c.element.radius_m)
+    if(pitch(c)*c.carrier_hz/c.medium.sound_speed_m_s>1+1e-12) throw Error("HTML 版间距最多为 1 个波长。");
+    if(pitch(c)<2*c.element.radius_m*(1-1e-12))
       throw Error("阵元直径大于间距。请减小半径、降低频率或增大间距。");
     if(!["uniform","hann"].includes(a.apodization)) throw Error("幅度分布仅支持 uniform / hann。");
     if(c.reflection_factor<1||c.reflection_factor>2) throw Error("反射系数须在 1–2 之间。");
-    if(Math.min(g.nx,g.ny,g.nz)<3||Math.max(g.nx,g.ny,g.nz)>151) throw Error("HTML 版每轴网格须为 3–151 点。");
+    if(Math.min(g.nx,g.ny,g.nz)<3||Math.max(g.nx,g.ny,g.nz)>(diagnostic?601:151)) throw Error("HTML 版每轴网格须为 3–151 点。");
     if(!(g.x_min_m<g.x_max_m&&g.y_min_m<g.y_max_m&&g.z_min_m>0&&g.z_min_m<g.z_max_m))
       throw Error("坐标范围必须递增，且 z 必须为正数。");
     if(c.focus.x_m<g.x_min_m||c.focus.x_m>g.x_max_m||c.focus.y_m<g.y_min_m||c.focus.y_m>g.y_max_m||
@@ -66,6 +76,8 @@ function createPmutKernel() {
       if(c.focus.x_m-rx<g.x_min_m||c.focus.x_m+rx>g.x_max_m||c.focus.y_m-ry<g.y_min_m||c.focus.y_m+ry>g.y_max_m)
         throw Error("整条轨迹须在目标平面内。请减小轨迹尺寸或移动中心。");
     }
+    if(c.element.radius_m*c.carrier_hz/c.medium.sound_speed_m_s>.5)
+      throw Error("HTML 快速核要求阵元半径不超过半波长。");
     const T=t.kind==="static"?1:t.frames;
     if(g.nx*g.ny*a.nx*a.ny*T>350000000) throw Error("计算规模过大，请减小阵列、网格或轨迹帧数。");
     if(c.engine.chunk_points<1||c.engine.chunk_points>65536) throw Error("分块参数须在 1–65536 之间。");
@@ -84,13 +96,44 @@ function createPmutKernel() {
     }
     return sum;
   }
+  const pitch=c=>c.array.pitch_mode==="physical"?c.array.pitch_m:c.array.pitch_wavelengths*c.medium.sound_speed_m_s/c.carrier_hz;
   function positions(c) {
-    const pitch=c.array.pitch_wavelengths*c.medium.sound_speed_m_s/c.carrier_hz, out=[];
+    const spacing=pitch(c), out=[];
     for(let y=0;y<c.array.ny;y++) for(let x=0;x<c.array.nx;x++)
-      out.push([(x-(c.array.nx-1)/2)*pitch,(y-(c.array.ny-1)/2)*pitch,0]);
+      out.push([(x-(c.array.nx-1)/2)*spacing,(y-(c.array.ny-1)/2)*spacing,0]);
     return out;
   }
-  function weights(pos,target,c) {
+  function random(seed) {
+    let state=(seed>>>0)||0x6d2b79f5;
+    const uniform=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;state>>>=0;return (state+.5)/4294967296;};
+    return {uniform,normal:()=>Math.sqrt(-2*Math.log(uniform()))*Math.cos(2*Math.PI*uniform())};
+  }
+  function sample(c) {
+    const rng=random(c.seed),e=c.imperfections,n=c.array.nx*c.array.ny,sigma=Math.sqrt(Math.log1p(e.amplitude_cv**2));
+    const out={version:e.rng,seed:c.seed,phase_rad:[],amplitude_gain:[],offsets_m:[],active:[]};
+    if(e.rng==="legacy"&&c.array.phase_error_std_deg)throw Error("旧版随机相位需 Python 复现。");
+    for(let i=0;i<n;i++){
+      out.phase_rad.push(rng.normal()*c.array.phase_error_std_deg*Math.PI/180);
+      out.amplitude_gain.push(Math.exp(sigma*rng.normal()-sigma*sigma/2));
+      out.offsets_m.push([rng.normal()*e.position_std_m,rng.normal()*e.position_std_m,0]);
+      out.active.push(Number(rng.uniform()>=e.failure_probability));
+    }
+    return out;
+  }
+  function actualPositions(nominal,s,c){
+    const n=nominal.length;
+    for(const k of ["phase_rad","amplitude_gain","active"])
+      if(!Array.isArray(s[k])||s[k].length!==n||s[k].some(v=>!Number.isFinite(v)))throw Error("误差样本不完整。");
+    if(!Array.isArray(s.offsets_m)||s.offsets_m.length!==n||s.offsets_m.some(v=>!Array.isArray(v)||v.length!==3||v.some(x=>!Number.isFinite(x))||v[2]!==0))
+      throw Error("仅支持有限的平面位置误差。");
+    if(s.amplitude_gain.some(v=>v<0)||s.active.some(v=>v!==0&&v!==1))throw Error("幅度或失效掩码无效。");
+    const pos=nominal.map((p,i)=>p.map((v,j)=>v+s.offsets_m[i][j]));
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)
+      if(Math.hypot(pos[i][0]-pos[j][0],pos[i][1]-pos[j][1])<2*c.element.radius_m*(1-1e-12))
+        throw Error("无效样本：位置偏差造成阵元重叠。");
+    return pos;
+  }
+  function weights(pos,target,c,errors=sample(c)) {
     const k=2*Math.PI*c.carrier_hz/c.medium.sound_speed_m_s, n=pos.length;
     const d=pos.map(p=>Math.hypot(p[0]-target[0],p[1]-target[1],target[2]));
     const min=Math.min(...d), amps=new Float64Array(n);
@@ -103,7 +146,10 @@ function createPmutKernel() {
     const factor=c.element.velocity_peak_m_s*Math.sqrt(n/norm);
     const re=new Float64Array(n),im=new Float64Array(n);
     for(let i=0;i<n;i++) {
-      const phase=k*(d[i]-min),amplitude=amps[i]*factor;
+      let phase=k*(d[i]-min);
+      if(c.imperfections.phase_bits){const step=2*Math.PI/2**c.imperfections.phase_bits;phase=Math.floor(phase/step+.5)*step;}
+      phase+=errors.phase_rad[i];
+      const amplitude=amps[i]*factor*errors.amplitude_gain[i]*errors.active[i];
       re[i]=amplitude*Math.cos(phase); im[i]=amplitude*Math.sin(phase);
     }
     return {re,im};
@@ -190,10 +236,11 @@ function createPmutKernel() {
     return {times,points};
   }
   const pause=()=>new Promise(resolve=>setTimeout(resolve,0));
-  async function simulate(input,onProgress=()=>{},shouldStop=()=>false) {
-    const c=validate(input),start=typeof performance!=="undefined"?performance.now():Date.now();
-    const g=c.grid, pos=positions(c), center=[c.focus.x_m,c.focus.y_m,c.focus.z_m];
-    const base=weights(pos,center,c),motion=path(c), allWeights=motion.points.map(p=>weights(pos,p,c));
+  async function simulate(input,onProgress=()=>{},shouldStop=()=>false,suppliedSample=null,diagnostic=false) {
+    const c=validate(input,diagnostic),start=typeof performance!=="undefined"?performance.now():Date.now();
+    const errors=suppliedSample||sample(c),nominal=positions(c),pos=actualPositions(nominal,errors,c);
+    const g=c.grid,center=[c.focus.x_m,c.focus.y_m,c.focus.z_m];
+    const base=weights(nominal,center,c,errors),motion=path(c), allWeights=motion.points.map(p=>weights(nominal,p,c,errors));
     const x=linspace(g.x_min_m,g.x_max_m,g.nx),y=linspace(g.y_min_m,g.y_max_m,g.ny),z=linspace(g.z_min_m,g.z_max_m,g.nz);
     const size=g.nx*g.ny,re=new Float64Array(size),im=new Float64Array(size);
     const rms=new Float64Array(size),radiation=new Float64Array(size);
@@ -256,6 +303,8 @@ function createPmutKernel() {
       sumSquare+=env*env;sumForce+=wave.force[i];peakFocus=Math.max(peakFocus,wave.focusRadiation[i]);
     }
     const metrics={
+      model_version:"2.0",sample_rng:errors.version,sample_seed:errors.seed,
+      target_pressure_rms_pa:(()=>{transfer(...center,pos,c,hr,hi);return Math.hypot(...dot(hr,hi,base))/Math.SQRT2;})(),
       pressure_peak_pa:peak*Math.SQRT2,pressure_rms_max_pa:peak,
       spl_db_re_20uPa:peak>0?20*Math.log10(peak/20e-6):null,
       intensity_max_w_m2:peak*peak/(c.medium.density_kg_m3*c.medium.sound_speed_m_s),
@@ -266,9 +315,9 @@ function createPmutKernel() {
       radiation_x_fwhm:width(x,rx,.5),radiation_y_fwhm:width(y,ry,.5),
       sidelobe_x_db:sidelobe(px),sidelobe_y_db:sidelobe(py),
       plane_area_m2:(x[x.length-1]-x[0])*(y[y.length-1]-y[0]),
-      element_count:pos.length,pitch_m:c.array.pitch_wavelengths*c.medium.sound_speed_m_s/c.carrier_hz,
+      element_count:pos.length,pitch_m:pitch(c),
       wavelength_m:c.medium.sound_speed_m_s/c.carrier_hz,
-      sum_squared_velocity_m2_s2:pos.length*c.element.velocity_peak_m_s**2,
+      sum_squared_velocity_m2_s2:Array.from(base.re,(v,i)=>v*v+base.im[i]*base.im[i]).reduce((a,b)=>a+b,0),
       envelope_mean_square:sumSquare/count,plane_force_time_mean_n:sumForce/count,
       commanded_focus_radiation_time_peak_pa:peakFocus,
       simulation_seconds:((typeof performance!=="undefined"?performance.now():Date.now())-start)/1000,
@@ -277,7 +326,7 @@ function createPmutKernel() {
       runtime:"standalone HTML; JavaScript Float64"
     };
     onProgress(1);
-    return {config:c,metrics,axes:{x,y,z},positions:pos,field:{re,im,rms,radiation,xzRms,profileX:px,profileY:py},
+    return {config:c,sample:errors,nominalPositions:nominal,metrics,axes:{x,y,z},positions:pos,field:{re,im,rms,radiation,xzRms,profileX:px,profileY:py},
       trajectory:{...motion,frames,forces,mean,focusRadiation},wave};
   }
   function toml(c) {
@@ -316,6 +365,6 @@ function createPmutKernel() {
     }
     return validate(data);
   }
-  return {defaults,clone,validate,jinc,positions,weights,width,sidelobe,planeForce,envelope,path,simulate,toml,parseToml};
+  return {defaults,clone,validate,pitch,random,sample,actualPositions,jinc,positions,weights,width,sidelobe,planeForce,envelope,path,simulate,toml,parseToml};
 }
 if(typeof module!=="undefined"&&module.exports) module.exports={createPmutKernel};

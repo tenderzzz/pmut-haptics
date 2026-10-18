@@ -1,12 +1,17 @@
 /* Offline UI. Canvas fields and embedded Plotly geometry; no external resources. */
 (() => {
   "use strict";
-  const K=createPmutKernel(), $=id=>document.getElementById(id);
+  const K=createPmutKernel(), T=createPmutTasks(K), $=id=>document.getElementById(id);
+  let lab=null;
   let draft=K.clone(K.defaults),result=null,baseline=null,busy=false,generation=0,active=null,animation=null;
   const limits=new WeakMap(),fonts='"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif';
   const bindings={
     nx:["array","nx",1],ny:["array","ny",1],carrier:[null,"carrier_hz",1000],
     radius:["element","radius_m",.000001],pitch:["array","pitch_wavelengths",1],
+    "physical-pitch":["array","pitch_m",.001],
+    "error-phase":["array","phase_error_std_deg",1],"error-amplitude":["imperfections","amplitude_cv",1],
+    "error-position":["imperfections","position_std_m",.000001],"error-failure":["imperfections","failure_probability",1],
+    "phase-bits":["imperfections","phase_bits",1],"error-seed":[null,"seed",1],
     velocity:["element","velocity_peak_m_s",1],fx:["focus","x_m",.001],fy:["focus","y_m",.001],fz:["focus","z_m",.001],
     "mod-frequency":["modulation","frequency_hz",1],duty:["modulation","duty_cycle",1],depth:["modulation","depth",1],
     frames:["trajectory","frames",1],"path-duration":["trajectory","duration_s",1],
@@ -16,6 +21,7 @@
   const plain=value=>Number(Number(value).toPrecision(12));
   function fill(c) {
     draft=K.clone(c);
+    $("pitch-mode").value=c.array.pitch_mode;$("error-rng").value=c.imperfections.rng;
     for(const [id,[section,key,scale]] of Object.entries(bindings)) $(id).value=plain((section?c[section][key]:c[key])/scale);
     $("apodization").value=c.array.apodization;$("motion").value=c.trajectory.kind;$("modulation").value=c.modulation.kind;
     $("grid").value=c.grid.nx;
@@ -31,6 +37,7 @@
       const value=$(id).valueAsNumber*scale;
       if(section)c[section][key]=value;else c[key]=value;
     }
+    c.array.pitch_mode=$("pitch-mode").value;c.imperfections.rng=$("error-rng").value;
     c.array.apodization=$("apodization").value;c.trajectory.kind=$("motion").value;c.modulation.kind=$("modulation").value;
     c.grid.nx=$("grid").valueAsNumber;c.grid.ny=c.grid.nx;
     if(c.trajectory.kind==="circle") c.trajectory.radius_m=$("path-size").valueAsNumber*.001;
@@ -41,6 +48,7 @@
     return K.validate(c);
   }
   function updateDependentControls() {
+    $("pitch").disabled=$("pitch-mode").value==="physical";$("physical-pitch").disabled=$("pitch-mode").value!=="physical";
     const moving=$("motion").value!=="static";
     $("path-size").disabled=!moving;$("path-duration").disabled=!moving;$("frames").disabled=!moving;
     $("duty").disabled=$("modulation").value!=="burst";
@@ -52,6 +60,7 @@
     if(result) notice(busy?"参数已改变。当前计算仍使用开始时的参数，完成后可再次运行。":"参数已改变，图表仍是上一次结果。点击“运行仿真”更新。","stale");
   }
   function setBusy(value) {
+    for(const el of document.querySelectorAll("[data-lab-run]"))el.disabled=value;
     busy=value;$("run").disabled=value;$("reset").disabled=value;$("import").disabled=value;
     $("progress-row").hidden=!value;$("run").textContent=value?"正在计算…":"运行仿真";
   }
@@ -60,7 +69,7 @@
     if(active?.url) URL.revokeObjectURL(active.url);
     active=null;
   }
-  function compute(c,token) {
+  function compute(c,token,sample=null,diagnostic=false) {
     return new Promise((resolve,reject)=>{
       const progress=value=>{if(token===generation)$("progress").value=value;};
       active={reject};
@@ -68,11 +77,11 @@
         if(active?.worker)active.worker.terminate();
         if(active?.url)URL.revokeObjectURL(active.url);
         active={reject};
-        K.simulate(c,progress,()=>token!==generation).then(resolve,reject);
+        K.simulate(c,progress,()=>token!==generation,sample,diagnostic).then(resolve,reject);
       };
       try {
         if(typeof Worker==="undefined") {fallback();return;}
-        const source="const K=("+createPmutKernel.toString()+")();self.onmessage=async e=>{try{const r=await K.simulate(e.data,p=>self.postMessage({kind:'progress',value:p}));self.postMessage({kind:'result',value:r});}catch(error){self.postMessage({kind:'error',value:error.message});}};";
+        const source="const K=("+createPmutKernel.toString()+")();self.onmessage=async e=>{try{const r=await K.simulate(e.data.config,p=>self.postMessage({kind:'progress',value:p}),()=>false,e.data.sample,e.data.diagnostic);self.postMessage({kind:'result',value:r});}catch(error){self.postMessage({kind:'error',value:error.message});}};";
         const url=URL.createObjectURL(new Blob([source],{type:"text/javascript"}));
         const worker=new Worker(url);active={reject,worker,url};let started=false;
         worker.onmessage=e=>{
@@ -83,7 +92,7 @@
           else reject(Error(message.value));
         };
         worker.onerror=event=>{event.preventDefault();if(!started)fallback();else reject(Error("后台计算中断，请减小计算规模后重试。"));};
-        worker.postMessage(c);
+        worker.postMessage({config:c,sample,diagnostic});
       } catch {fallback();}
     });
   }
@@ -99,7 +108,7 @@
       result=next;draft=K.clone(c);$("frame").value=0;$("frame").max=next.trajectory.frames.length-1;
       for(const id of ["save-config","save-baseline","export-toml","export-metrics","export-data","export-csv"]) $(id).disabled=false;
       $("play").disabled=next.trajectory.frames.length===1;$("frame").disabled=next.trajectory.frames.length===1;
-      render();
+      render();lab?.onResult();
       let changed=false;
       try{changed=JSON.stringify(read())!==JSON.stringify(c);}catch{changed=true;}
       if(changed)notice("参数已改变，当前显示刚完成的结果。点击“运行仿真”更新。","stale");
@@ -212,7 +221,7 @@
   }
   function arrayChart() {
     const canvas=$("array-chart"),{ctx,width,height}=setup(canvas),pos=result.positions,c=result.config;
-    const w=K.weights(pos,[c.focus.x_m,c.focus.y_m,c.focus.z_m],c);
+    const w=K.weights(result.nominalPositions||K.positions(c),[c.focus.x_m,c.focus.y_m,c.focus.z_m],c,result.sample);
     const span=Math.max(c.array.nx,c.array.ny)*result.metrics.pitch_m,scale=Math.min(width-20,height-20)/span;
     pos.forEach((p,i)=>{
       const angle=Math.atan2(w.im[i],w.re[i]),hue=(angle/Math.PI*180+360)%360;
@@ -242,7 +251,7 @@
       $("geometry-status").hidden=false;return;
     }
     const pos=current.positions,path=current.trajectory.points;
-    const w=K.weights(pos,[c.focus.x_m,c.focus.y_m,c.focus.z_m],c);
+    const w=K.weights(current.nominalPositions||K.positions(c),[c.focus.x_m,c.focus.y_m,c.focus.z_m],c,current.sample);
     const coordinate=(points,axis)=>points.map(p=>p[axis]*1000);
     const traces=[
       {
@@ -332,6 +341,10 @@
   }
   function renderMotion() {
     if(!result||$("motion-panel").hidden)return;
+    if(result.archived){
+      for(const id of ["motion-chart","wave-chart"]){const ctx=$(id).getContext("2d");ctx.clearRect(0,0,$(id).width,$(id).height);}
+      $("wave-note").textContent="已打开静态快照；完整轨迹和波形未存入实验库。重新运行即可恢复。";return;
+    }
     const at=Number($("frame").value),tr=result.trajectory;
     const peak=Math.max(...tr.frames.map(maximum));
     heatmap($("motion-chart"),tr.frames[at],result.axes.x,result.axes.y,{max:peak,unit:"Pa",path:tr.points,target:tr.points[at]});
@@ -358,12 +371,12 @@
       $("profile-note").textContent="橙线为声压 −6 dB。视野内 x 旁瓣："+(m.sidelobe_x_db===null?"未检出完整旁瓣":fmt(m.sidelobe_x_db,2)+" dB")+"。";
       arrayChart();renderGeometry();
     }
-    renderMotion();renderComparison();
+    renderMotion();renderComparison();lab?.refresh();
   }
   $("quantity").addEventListener("change",render);
   function stopAnimation() {if(animation!==null)cancelAnimationFrame(animation);animation=null;$("play").textContent="播放轨迹";}
   $("play").addEventListener("click",()=>{
-    if(animation!==null){stopAnimation();return;}if(!result||result.trajectory.frames.length<2)return;
+    if(animation!==null){stopAnimation();return;}if(!result||result.archived||result.trajectory.frames.length<2)return;
     $("play").textContent="暂停";let previous=0;
     const tick=now=>{
       if(now-previous>=80) {
@@ -432,6 +445,25 @@
   new ResizeObserver(()=>{if(!resizePending){resizePending=true;requestAnimationFrame(()=>{resizePending=false;render();});}}).observe($("workspace"));
   const narrow=window.matchMedia("(max-width:760px)");
   const updateWidth=()=>{$("parameters").open=!narrow.matches;};updateWidth();narrow.addEventListener("change",updateWidth);
+  function ensureIdle(){if(busy)throw Error("请先等待当前计算完成或取消。");}
+  function startJob(){
+    ensureIdle();stopAnimation();const token=++generation;setBusy(true);$("progress").value=0;notice("正在运行实验任务，可随时取消。");
+    return {
+      compute:async(c,sample=null,diagnostic=false)=>{
+        if(token!==generation)throw Error("已取消。");
+        try{return await compute(c,token,sample,diagnostic);}finally{if(token===generation)cleanup();}
+      },
+      stop:()=>token!==generation,
+      finish:()=>{if(token===generation){cleanup();setBusy(false);notice("实验任务结束，结果见对应页签。");}}
+    };
+  }
+  function openRecord(snapshot){
+    ensureIdle();stopAnimation();result=K.clone(snapshot);fill(result.config);
+    for(const id of ["save-config","save-baseline","export-toml","export-metrics","export-csv"])$(id).disabled=false;
+    $("export-data").disabled=true;$("play").disabled=true;$("frame").disabled=true;
+    $("frame").value=0;$("frame").max=0;render();selectTab($("field-tab"));
+  }
+  lab=mountPmutLab({K,T,$,getResult:()=>result,read,fill,notice,download,serialize,heatmap,startJob,ensureIdle,openRecord});
   fill(K.clone(K.defaults));
   run();
 })();

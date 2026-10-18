@@ -13,7 +13,7 @@ from .simulation import simulate
 
 def parser():
     root = argparse.ArgumentParser(prog="pmut-haptics", description="pMUT airborne stimulus simulator")
-    root.add_argument("--version", action="version", version="pmut-haptics 0.1.0")
+    root.add_argument("--version", action="version", version="pmut-haptics 0.2.0")
     sub = root.add_subparsers(dest="command", required=True)
     run = sub.add_parser("run", help="Simulate a configured focal stimulus")
     run.add_argument("--config", type=Path)
@@ -21,9 +21,19 @@ def parser():
     run.add_argument("--no-plots", action="store_true")
     scan = sub.add_parser("sweep", help="Compare array size and pitch")
     scan.add_argument("--config", type=Path)
+    scan.add_argument("--task", type=Path, help="JSON custom sweep task")
     scan.add_argument("--output", type=Path, required=True)
     scan.add_argument("--normalization", choices=["fixed_sum_squared_velocity", "per_element"],
                       default="fixed_sum_squared_velocity")
+    robust = sub.add_parser("robustness", help="Run a reproducible robustness task")
+    robust.add_argument("--task", type=Path, required=True)
+    robust.add_argument("--output", type=Path, required=True)
+    quality = sub.add_parser("quality", help="Check grid, region and optional independent integral")
+    quality.add_argument("--config", type=Path)
+    quality.add_argument("--output", type=Path, required=True)
+    quality.add_argument("--reference", action="store_true")
+    quality.add_argument("--grid-tolerance", type=float, default=.02)
+    quality.add_argument("--region-tolerance", type=float, default=.05)
     bench = sub.add_parser("benchmark", help="Measure reference and vectorized kernels")
     bench.add_argument("--output", type=Path, required=True)
     bench.add_argument("--repeats", type=int, default=5)
@@ -40,7 +50,26 @@ def parser():
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
-        if args.command in {"run", "sweep"}:
+        if args.command == "robustness" or (args.command == "sweep" and args.task):
+            from .tasks import save_task
+            task = json.loads(args.task.read_text(encoding="utf-8"))
+            if task.get("kind") != args.command:
+                raise ValueError("Task kind does not match command")
+            result = save_task(task, args.output)
+            print(json.dumps({"status": result["status"], "rows": len(result["rows"]),
+                              "output": str(args.output)}))
+        elif args.command == "quality":
+            from .export import save_json, write_manifest
+            from .tasks import quality
+            config = load_config(args.config) if args.config else SimulationConfig()
+            if args.output.exists():
+                raise FileExistsError(args.output)
+            report = quality(config, args.grid_tolerance, args.region_tolerance, args.reference)
+            args.output.mkdir(parents=True, exist_ok=False)
+            save_json(args.output/"quality.json", report)
+            write_manifest(args.output)
+            print(json.dumps({"output": str(args.output)}))
+        elif args.command in {"run", "sweep"}:
             config = load_config(args.config) if args.config else SimulationConfig()
             config.validate()
             if args.command == "run":
@@ -80,7 +109,7 @@ def main(argv=None):
                                     "--theme.secondaryBackgroundColor=#e9f0f6",
                                     "--theme.textColor=#19364b"])
         return 0
-    except (ValueError, FileExistsError, OSError) as exc:
+    except (ValueError, FileExistsError, OSError, KeyError, TypeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
 

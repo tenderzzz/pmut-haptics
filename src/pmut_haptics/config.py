@@ -28,6 +28,17 @@ class Array:
     pitch_wavelengths: float = 0.5
     apodization: str = "uniform"
     phase_error_std_deg: float = 0.0
+    pitch_mode: str = "wavelength"
+    pitch_m: float = 0.0015676416819012796
+
+
+@dataclass(frozen=True)
+class Imperfections:
+    amplitude_cv: float = 0.0
+    position_std_m: float = 0.0
+    failure_probability: float = 0.0
+    phase_bits: int = 0
+    rng: str = "portable-v1"
 
 
 @dataclass(frozen=True)
@@ -78,6 +89,7 @@ class Engine:
 
 @dataclass(frozen=True)
 class SimulationConfig:
+    schema_version: int = 2
     title: str = "空中静态触点"
     carrier_hz: float = 109400.0
     reflection_factor: float = 2.0
@@ -85,6 +97,7 @@ class SimulationConfig:
     medium: Medium = field(default_factory=Medium)
     element: Element = field(default_factory=Element)
     array: Array = field(default_factory=Array)
+    imperfections: Imperfections = field(default_factory=Imperfections)
     focus: Focus = field(default_factory=Focus)
     grid: Grid = field(default_factory=Grid)
     modulation: Modulation = field(default_factory=Modulation)
@@ -97,7 +110,8 @@ class SimulationConfig:
 
     @property
     def pitch_m(self) -> float:
-        return self.array.pitch_wavelengths * self.wavelength_m
+        return (self.array.pitch_m if self.array.pitch_mode == "physical"
+                else self.array.pitch_wavelengths * self.wavelength_m)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -109,12 +123,16 @@ class SimulationConfig:
         nested = {
             "medium": Medium, "element": Element, "array": Array, "focus": Focus,
             "grid": Grid, "modulation": Modulation, "trajectory": Trajectory, "engine": Engine,
+            "imperfections": Imperfections,
         }
         try:
             unknown = set(data) - {f.name for f in fields(cls)}
             if unknown:
                 raise ValueError(f"Unknown configuration keys: {sorted(unknown)}")
             values = dict(data)
+            if "schema_version" not in values:
+                values["schema_version"] = 1
+                values.setdefault("imperfections", {"rng": "legacy"})
             for name, kind in nested.items():
                 if name in values:
                     if not isinstance(values[name], dict):
@@ -144,6 +162,17 @@ class SimulationConfig:
                     if not math.isfinite(value):
                         raise ValueError(f"{f.name} must be finite")
         check_types(self)
+        e = self.imperfections
+        if self.schema_version not in {1, 2}:
+            raise ValueError("Unsupported configuration schema version")
+        if self.array.pitch_mode not in {"wavelength", "physical"} or self.array.pitch_m <= 0:
+            raise ValueError("Invalid pitch mode or physical pitch")
+        if e.amplitude_cv < 0 or e.amplitude_cv > 2 or e.position_std_m < 0:
+            raise ValueError("Amplitude CV must be in [0,2]; position std must be nonnegative")
+        if not 0 <= e.failure_probability <= 1 or not 0 <= e.phase_bits <= 16:
+            raise ValueError("Failure probability must be in [0,1]; phase bits in 0..16")
+        if e.rng not in {"legacy", "portable-v1"}:
+            raise ValueError("Unsupported random algorithm")
         positive = {
             "carrier_hz": self.carrier_hz,
             "sound_speed_m_s": self.medium.sound_speed_m_s,

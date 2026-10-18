@@ -45,7 +45,7 @@ TOML 和 Python API 共用不可变的 SimulationConfig。未提供的字段使�
 
 每个静态平面最多 100 万点，轨迹输出最多 1000 万个平面采样值，包络最多 200 万点。超出边界会要求减小配置。整个运动轨迹必须留在目标平面范围内。
 
-修改载波会同时改变波长和以波长定义的阵元间距。若需固定真实间距，应同步调整 pitch_wavelengths。主界面使用较快的 81×81 目标网格；命令行默认预设为 101×101，指标微小差异来自采样。
+修改载波会同时改变波长和以波长定义的阵元间距。固定真实间距可选择 array.pitch_mode="physical" 并设置 array.pitch_m。旧配置仍按波长倍数解释。主界面使用较快的 81×81 目标网格；命令行默认预设为 101×101，指标微小差异来自采样。
 
 ## 预设
 
@@ -82,3 +82,21 @@ NPZ 的主要字段：
 | trajectory_mean_unmodulated_radiation_pa | (ny,nx)，整段路径时间平均、未调制图 |
 
 静态场景 T=1。width_m=null 表示不存在可报告的完整宽度，结合 reason 区分零信号和边界截断。JSON 禁止 NaN/Infinity，保持可读性和跨语言兼容。NPZ 可以用 `numpy.load(path, allow_pickle=False)` 读取。
+
+## 0.2.0 配置扩展
+
+schema_version 默认为 2；无版本旧配置迁移为 1，保留旧随机算法。原字段与单位不变。
+
+| 字段 | 默认值 | 含义 |
+| --- | --- | --- |
+| array.pitch_mode | wavelength | wavelength / physical |
+| array.pitch_m | 0.0015676416819012796 | physical 模式实际间距 m |
+| imperfections.amplitude_cv | 0 | 幅度 CV，0–2；非负对数正态响应 |
+| imperfections.position_std_m | 0 | x/y 位置标准差 m |
+| imperfections.failure_probability | 0 | 每阵元失效概率，0–1 |
+| imperfections.phase_bits | 0 | 0 连续；1–16 量化位数 |
+| imperfections.rng | portable-v1 | 新算法；旧配置为 legacy |
+
+NPZ 新增 nominal_positions_m、error_phase_rad、error_amplitude_gain、error_offsets_m、error_active；element_positions_m 表示实际位置。metrics 新增 model_version、sample_rng、sample_seed、target_pressure_rms_pa。理想配置下几何不变。
+
+任务字段和输出见 [实验工作流指南](laboratory.md)。

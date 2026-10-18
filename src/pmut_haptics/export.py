@@ -43,10 +43,15 @@ def save_result(result, output, plots=True):
     if plots:
         from .plotting import plot_result
         plot_result(result, output)
+    write_manifest(output)
+    return output
+
+
+def write_manifest(output):
+    output = Path(output)
     hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-              for p in sorted(output.iterdir()) if p.is_file()}
+              for p in sorted(output.iterdir()) if p.is_file() and p.name != "manifest.json"}
     save_json(output/"manifest.json", {
         "created_at": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
-        "schema_version": 1, "files_sha256": hashes,
+        "schema_version": 1, "model_version": "2.0", "files_sha256": hashes,
     })
-    return output

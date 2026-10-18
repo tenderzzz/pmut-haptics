@@ -12,3 +12,16 @@ main{min-width:0;padding:32px 32px 0}.page-head{display:flex;justify-content:spa
 .geometry-figure{margin-top:22px;padding-bottom:12px}.geometry-actions{display:flex;gap:7px;flex-wrap:wrap}.geometry-actions button{font-size:12px;min-height:32px;padding:5px 10px}.geometry-figure>.hint{margin-top:10px}#geometry-chart{width:100%;height:460px;min-width:0}#geometry-chart canvas{height:auto;width:auto}.geometry-figure .modebar{z-index:2}
 @media(max-width:760px){.geometry-figure .figure-head{align-items:flex-start;flex-wrap:wrap}.geometry-actions{gap:6px}.geometry-actions button{min-height:36px}#geometry-chart{height:380px}}
 #path-size-label>span,label[for="path-duration"]>span{display:block}
+
+/* Extended laboratory uses the established ink/teal palette and system type. */
+.lab-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;max-width:850px;margin:20px 0 10px}
+.lab-form label{font-size:13px;margin:0}.lab-form textarea{display:block;width:100%;margin-top:5px;font:inherit;padding:9px;color:var(--ink);border:1px solid var(--line);border-radius:4px;resize:vertical}
+.check{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:400;margin:14px 0;max-width:850px}.check input{width:18px;min-height:18px;margin:0;accent-color:var(--teal)}
+.lab-plots,.lab-maps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0}.lab-plot{height:270px;min-width:0}.lab-maps canvas{width:100%;height:300px}
+.lab-actions{display:flex;flex-wrap:wrap;gap:6px}.lab-actions button{font-size:12px;min-height:32px;padding:5px 9px}
+#library-rows td{vertical-align:top}#library-rows small{display:block;color:var(--muted);white-space:pre-wrap;max-width:380px;overflow-wrap:anywhere}
+#library-rows input[type=checkbox]{width:18px;min-height:18px}section[role=tabpanel]{min-width:0}
+.lab-empty{color:var(--muted);padding:20px 0}.lab-plots:empty,.lab-maps:empty{display:none}
+textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+@media(max-width:760px){.lab-form,.lab-plots,.lab-maps{grid-template-columns:1fr}.tabs{gap:20px}.export-actions{gap:8px}}
+@media print{.controls,.tabs,.export-actions,.form-actions,footer{display:none}.app{display:block}main{padding:0}}

@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-18",
+  "version": "0.2.0",
+  "model_version": "2.0",
+  "pytest": {
+    "passed": 58,
+    "skipped": 0
+  },
+  "ruff": "passed",
+  "browser": {
+    "checks": [
+      "offline default calculation",
+      "save computed configuration with dirty draft",
+      "IndexedDB reload, backup recovery and duplicate skip",
+      "common-scale comparison, difference and archived snapshot",
+      "custom sweep and invalid rows",
+      "grid/region diagnostics and independent Python reference import",
+      "paired quantization comparison, sample statistics and distributions",
+      "cancel retains completed samples",
+      "printable report escapes user text",
+      "mobile layout",
+      "Worker and storage unavailable fallback"
+    ],
+    "errors": [],
+    "network": [],
+    "passed": true
+  },
+  "examples": {
+    "focus_scan_rows": 9,
+    "robustness_rows": 150,
+    "robustness_invalid_rows": 0
+  },
+  "quality_checks": {
+    "grid": {
+      "pressure_rms_max_pa": {
+        "status": "pass",
+        "relative_change": 0.0,
+        "threshold": 0.02,
+        "before": 142.7178514608478,
+        "after": 142.7178514608478
+      },
+      "pressure_x_minus6db_m": {
+        "status": "pass",
+        "relative_change": 0.0003536786412172589,
+        "threshold": 0.02,
+        "before": 0.010259417447690336,
+        "after": 0.010263045984512916
+      },
+      "force_over_displayed_plane_n": {
+        "status": "pass",
+        "relative_change": 0.00010689811452751161,
+        "threshold": 0.02,
+        "before": 1.92619343098949e-05,
+        "after": 1.925987524543502e-05
+      }
+    },
+    "region": {
+      "force_over_displayed_plane_n": {
+        "status": "sensitive",
+        "relative_change": 0.0761906569773074,
+        "threshold": 0.05,
+        "before": 1.92619343098949e-05,
+        "after": 2.072951373961953e-05
+      }
+    },
+    "pressure_x_minus6db": {
+      "width_m": 0.010259417447690336,
+      "clipped": false,
+      "reason": "ok",
+      "left_m": -0.005129708723845168,
+      "right_m": 0.005129708723845168,
+      "peak_index": 25
+    },
+    "pressure_y_minus6db": {
+      "width_m": 0.010259417447690336,
+      "clipped": false,
+      "reason": "ok",
+      "left_m": -0.005129708723845168,
+      "right_m": 0.005129708723845168,
+      "peak_index": 25
+    },
+    "focus": {
+      "lateral_error_m": 0.0,
+      "scope": "sampled target plane only"
+    },
+    "reference": {
+      "status": "pass",
+      "reason": "nine target-plane points only",
+      "quadrature_relative_change": 2.040786841357658e-16,
+      "relative_l2_error": 0.0016428179478697445,
+      "quadrature_tolerance": 0.001,
+      "model_tolerance": 0.02,
+      "points_m": [
+        [
+          -0.0031352833638025593,
+          -0.0031352833638025593,
+          0.05
+        ],
+        [
+          0.0,
+          -0.0031352833638025593,
+          0.05
+        ],
+        [
+          0.0031352833638025593,
+          -0.0031352833638025593,
+          0.05
+        ],
+        [
+          -0.0031352833638025593,
+          0.0,
+          0.05
+        ],
+        [
+          0.0,
+          0.0,
+          0.05
+        ],
+        [
+          0.0031352833638025593,
+          0.0,
+          0.05
+        ],
+        [
+          -0.0031352833638025593,
+          0.0031352833638025593,
+          0.05
+        ],
+        [
+          0.0,
+          0.0031352833638025593,
+          0.05
+        ],
+        [
+          0.0031352833638025593,
+          0.0031352833638025593,
+          0.05
+        ]
+      ]
+    }
+  },
+  "source_config": "configs/laboratory_reference.toml",
+  "limits": [
+    "local macOS and Chromium only",
+    "no remote publication",
+    "assumed velocity; not hardware validated"
+  ]
+}

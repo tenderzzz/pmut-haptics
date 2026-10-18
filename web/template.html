@@ -27,6 +27,8 @@
         <label for="radius">阵元半径 <span>μm</span><input id="radius" type="number" min="1" max="5000" step="1" value="415"></label>
         <label for="pitch">间距 / λ<input id="pitch" type="number" min="0.05" max="1" step="0.05" value="0.5"></label>
       </div>
+      <label for="pitch-mode">间距模式<select id="pitch-mode"><option value="wavelength">波长倍数</option><option value="physical">固定物理间距</option></select></label>
+      <label for="physical-pitch">固定间距 <span>mm</span><input id="physical-pitch" type="number" min="0.001" step="any" value="1.5676416819012796"></label>
       <label for="velocity">峰值表面振速 <span>m/s</span><input id="velocity" type="number" min="0" max="10" step="0.1" value="1"></label>
       <label for="apodization">阵元幅度<select id="apodization"><option value="uniform">均匀</option><option value="hann">Hann 加权</option></select></label>
       <p class="hint">加权保持振速平方和一致，不等同于等电功率。</p>
@@ -51,6 +53,16 @@
       </div>
       <label for="depth">调制深度<input id="depth" type="number" min="0" max="1" step="0.1" value="1"></label>
     </fieldset>
+    <details class="advanced"><summary>阵列误差与相位量化</summary>
+      <label for="error-phase">相位标准差 <span>°</span><input id="error-phase" type="number" min="0" step="any" value="0"></label>
+      <label for="error-amplitude">幅度变异系数 <span>标准差 / 均值</span><input id="error-amplitude" type="number" min="0" max="2" step="any" value="0"></label>
+      <label for="error-position">位置标准差 <span>μm，x/y 独立</span><input id="error-position" type="number" min="0" step="any" value="0"></label>
+      <label for="error-failure">失效概率 <span>0–1</span><input id="error-failure" type="number" min="0" max="1" step="any" value="0"></label>
+      <label for="phase-bits">相位量化位数 <span>0 表示连续相位</span><input id="phase-bits" type="number" min="0" max="16" step="1" value="0"></label>
+      <label for="error-seed">随机种子<input id="error-seed" type="number" min="0" max="4294967295" step="1" value="42"></label>
+      <label for="error-rng">随机算法<select id="error-rng"><option value="portable-v1">可复现跨语言 v1</option><option value="legacy">旧 Python 相位算法</option></select></label>
+      <p class="hint">控制相位依据名义位置；不自动补偿位置偏差或失效。实际误差随结果保存。</p>
+    </details>
     <details class="advanced"><summary>采样与介质</summary>
       <div class="pair">
         <label for="grid">平面每轴网格<input id="grid" type="number" min="3" max="151" step="2" value="81"></label>
@@ -79,6 +91,10 @@
     <button role="tab" aria-selected="true" aria-controls="field-panel" id="field-tab" tabindex="0">声场与触点</button>
     <button role="tab" aria-selected="false" aria-controls="motion-panel" id="motion-tab" tabindex="-1">调制与移动</button>
     <button role="tab" aria-selected="false" aria-controls="compare-panel" id="compare-tab" tabindex="-1">实验对比</button>
+    <button role="tab" aria-selected="false" aria-controls="library-panel" id="library-tab" tabindex="-1">实验库</button>
+    <button role="tab" aria-selected="false" aria-controls="sweep-panel" id="sweep-tab" tabindex="-1">参数扫描</button>
+    <button role="tab" aria-selected="false" aria-controls="quality-panel" id="quality-tab" tabindex="-1">质量检查</button>
+    <button role="tab" aria-selected="false" aria-controls="robust-panel" id="robust-tab" tabindex="-1">鲁棒性</button>
     <button role="tab" aria-selected="false" aria-controls="model-panel" id="model-tab" tabindex="-1">模型与导出</button>
   </nav>
   <section role="tabpanel" id="field-panel" aria-labelledby="field-tab">
@@ -133,6 +149,53 @@
     <div class="table-wrap" id="comparison" hidden><table><caption>相同指标口径的实验对比</caption><thead><tr><th scope="col">指标</th><th scope="col">已保存基准</th><th scope="col">当前实验</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
     <p class="hint">比较阵元数量时，同时检查振速平方和；它不等于电功率。当前页面关闭后基准会清空。</p>
   </section>
+  <section role="tabpanel" id="library-panel" aria-labelledby="library-tab" hidden>
+    <div class="section-head"><div><h2>可追溯的实验记录</h2><p>保存最近一次计算的参数、静态场图与指标。完整轨迹请单独导出。</p></div></div>
+    <div class="lab-form"><label for="experiment-name">实验名称<input id="experiment-name" maxlength="200" placeholder="例如：50 mm 焦距基准"></label><label for="experiment-notes">实验备注<textarea id="experiment-notes" rows="2" maxlength="10000" placeholder="记录目的、观察和假设"></textarea></label></div>
+    <div class="export-actions"><button id="library-save">保存当前实验</button><button id="library-backup">备份整个实验库</button><button id="library-import">恢复备份</button><button id="experiment-report">下载可打印报告</button></div>
+    <input id="library-file" type="file" accept=".json" hidden>
+    <p id="library-status" class="notice" role="status">正在打开本地实验库…</p>
+    <p class="hint">本地存储与浏览器和文件位置有关；更换浏览器或移动 HTML 前，请下载备份。存储不可用时记录只保留到页面关闭。</p>
+    <div class="table-wrap"><table><caption>保存的实验；勾选最多四条进行对比</caption><thead><tr><th>对比</th><th>名称与备注</th><th>保存时间 / 模型</th><th>操作</th></tr></thead><tbody id="library-rows"></tbody></table></div>
+    <div class="export-actions"><button id="library-compare">比较勾选的实验</button></div>
+    <div id="library-comparison"></div>
+  </section>
+  <section role="tabpanel" id="sweep-panel" aria-labelledby="sweep-tab" hidden>
+    <h2>一次改变一个设计参数</h2><p class="hint">以左侧当前参数创建任务。每组结果独立记录；阵列边长扫描同时改变 x/y 数量。</p>
+    <div class="lab-form">
+      <label for="sweep-parameter">扫描参数<select id="sweep-parameter"><option value="focus.z_m">焦距（mm）</option><option value="carrier_hz">频率（kHz）</option><option value="array.side">阵列边长（阵元数）</option><option value="array.pitch_m">物理间距（mm）</option><option value="array.pitch_wavelengths">间距 / λ</option><option value="element.velocity_peak_m_s">峰值振速（m/s）</option></select></label>
+      <label for="sweep-mode">取值方式<select id="sweep-mode"><option value="range">等间距范围</option><option value="list">显式数值列表</option></select></label>
+      <label for="sweep-start">起始值<input id="sweep-start" type="number" step="any" value="30"></label>
+      <label for="sweep-stop">结束值<input id="sweep-stop" type="number" step="any" value="70"></label>
+      <label for="sweep-count">点数<input id="sweep-count" type="number" min="2" max="50" step="1" value="9"></label>
+      <label for="sweep-values">数值列表（逗号分隔）<input id="sweep-values" value="30,40,50,60,70" disabled></label>
+      <label for="sweep-normalization">阵元数量变化时<select id="sweep-normalization"><option value="fixed_sum_squared_velocity">保持振速平方和</option><option value="per_element">保持每阵元振速</option></select></label>
+      <label for="sweep-pitch">扫频时的间距<select id="sweep-pitch"><option value="physical">固定起始物理间距</option><option value="wavelength">固定起始波长倍数</option></select></label>
+    </div>
+    <label class="check"><input id="sweep-static" type="checkbox"> 若当前为运动轨迹，创建静态副本</label>
+    <div class="export-actions"><button id="sweep-run" class="primary" data-lab-run>运行扫描</button><button id="sweep-task">导出任务给 Python</button><button id="sweep-export" disabled>导出扫描结果</button></div>
+    <p id="sweep-status" class="notice" role="status">尚未运行。网页最多 50 组；大批量任务可导出给 Python。</p>
+    <div id="sweep-plots" class="lab-plots"></div><div id="sweep-results" class="table-wrap"></div>
+  </section>
+  <section role="tabpanel" id="quality-panel" aria-labelledby="quality-tab" hidden>
+    <h2>检查数值质量</h2><p class="hint">检查最近一次计算的配置；加密网格和扩大积分区域分别比较，不改变原实验。阈值是工程默认值。</p>
+    <div class="lab-form"><label for="quality-grid">网格相对变化阈值 <span>%</span><input id="quality-grid" type="number" min="0.01" max="100" step="any" value="2"></label><label for="quality-region">区域相对变化阈值 <span>%</span><input id="quality-region" type="number" min="0.01" max="100" step="any" value="5"></label></div>
+    <label class="check"><input id="quality-static" type="checkbox"> 若结果为运动轨迹，检查静态副本</label>
+    <div class="export-actions"><button id="quality-run" class="primary" data-lab-run>检查数值质量</button><button id="quality-import">导入 Python 检查报告</button><button id="quality-export" disabled>导出检查报告</button><button id="quality-config">导出检查用 TOML</button></div>
+    <input id="quality-file" type="file" accept=".json" hidden>
+    <p id="quality-status" class="notice" role="status">尚未检查。独立圆盘积分使用 Python quality --reference；可导入匹配的报告。</p>
+    <div id="quality-results" class="table-wrap"></div>
+    <div class="prose"><h3>模型近似与输入假设</h3><p>圆活塞及阵元远场近似、法向辐射压近似仍然存在。网格收敛不等于模型正确；输入振速尚未标定，结果不代表实测触觉。区域检查只表示扩大有限区域后的变化。</p></div>
+  </section>
+  <section role="tabpanel" id="robust-panel" aria-labelledby="robust-tab" hidden>
+    <h2>阵列误差下的性能分布</h2><p class="hint">先在左侧“阵列误差与相位量化”设置误差。每次试验生成固定阵元误差，不对失效重新归一化。</p>
+    <div class="lab-form"><label for="robust-count">独立误差样本数<input id="robust-count" type="number" min="1" max="100" step="1" value="30"></label></div>
+    <label class="check"><input id="robust-quantization" type="checkbox"> 比较连续相位及 3、4、6、8 位（各组复用相同样本，计算量为五倍）</label>
+    <label class="check"><input id="robust-static" type="checkbox"> 若当前为运动轨迹，创建静态副本</label>
+    <div class="export-actions"><button id="robust-run" class="primary" data-lab-run>运行鲁棒性试验</button><button id="robust-task">导出任务给 Python</button><button id="robust-export" disabled>导出试验结果</button></div>
+    <p id="robust-status" class="notice" role="status">尚未运行。P5–P95 是抽样分位范围，不是置信区间或可靠性保证。</p>
+    <div id="robust-summary" class="table-wrap"></div><div id="robust-plots" class="lab-plots"></div><div id="robust-results" class="table-wrap"></div>
+  </section>
   <section role="tabpanel" id="model-panel" aria-labelledby="model-tab" hidden>
     <div class="prose">
       <h2>从声场到表面刺激</h2>
@@ -142,7 +205,7 @@
       <h3>如何理解这些数字</h3>
       <ul><li>合力只覆盖当前显示的有限平面，不是全空间总力。</li><li>声压 −6 dB 宽度和辐射压半高宽是不同指标。没有完整交点时显示“超出视野”。</li><li>路径可以很细，实际触点仍受波束宽度限制。默认圆形路径的时间平均刺激未必是清晰的空心圆。</li><li>没有模拟皮肤力学、真实触觉阈值、驱动电压标定或硬件闭环。</li></ul>
       <h3>离线版本的范围</h3>
-      <p>保留空气触觉的参数调整、声场、调制、轨迹、对比和导出。每方向最多 32 个阵元、每轴 151 个网格点、间距不超过 1λ；随机相位误差和历史水中成像请使用完整 Python 工程。导出的 TOML 可由 Python 版直接读取。数值对照记录随项目提供。</p>
+      <p>保留空气触觉的参数调整、声场、调制、轨迹、对比和导出。每方向最多 32 个阵元、每轴 151 个网格点、间距不超过 1λ；旧版随机相位复现和历史水中成像请使用完整 Python 工程。新增误差试验支持跨语言算法。导出的 TOML 可由 Python 版直接读取。数值对照记录随项目提供。</p>
       <p>默认阵元数量、半径与载波参考 <a href="https://bsac.berkeley.edu/node/328" target="_blank" rel="noopener noreferrer">Pala 等的非接触 pMUT 研究</a>；辐射压模型参考 <a href="https://hapislab.org/public/hiroyuki_shinoda/research/pdf/08Eurohaptics_iwamoto.pdf" target="_blank" rel="noopener noreferrer">Iwamoto 等</a>。间距、焦距和振速是示例假设。只有主动点击这些文献链接时才会访问网络。</p>
       <h3>保存这次实验</h3>
       <div class="export-actions"><button id="export-toml" disabled>配置 TOML</button><button id="export-metrics" disabled>指标 JSON</button><button id="export-data" disabled>全部数据 JSON</button><button id="export-csv" disabled>焦平面 CSV</button></div>
@@ -157,5 +220,8 @@
 -->
 <script>/*__PLOTLY__*/</script>
 <script>/*__CORE__*/</script>
+<script>/*__TASKS__*/</script>
+<script>/*__LIBRARY__*/</script>
+<script>/*__LAB__*/</script>
 <script>/*__UI__*/</script>
 </body></html>

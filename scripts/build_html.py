@@ -9,6 +9,9 @@ for token, filename in [
     ("/*__PLOTLY_LICENSE__*/", "vendor/LICENSE-plotly.txt"),
     ("/*__PLOTLY__*/", "vendor/plotly.min.js"),
     ("/*__CORE__*/", "core.js"),
+    ("/*__TASKS__*/", "tasks.js"),
+    ("/*__LIBRARY__*/", "library.js"),
+    ("/*__LAB__*/", "lab.js"),
     ("/*__UI__*/", "ui.js"),
 ]:
     content = (web / filename).read_text(encoding="utf-8")
